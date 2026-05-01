@@ -21,3 +21,22 @@ model Product {
   stock        Int
   createdAt    DateTime @default(now()) //ini kalau bisa jamnya sesuai local/indo (UTC +7)
 }
+
+enum Role {
+  OWNER
+  ADMIN
+  KASIR
+  PACKAGING
+  USER
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nama      String
+  alamat    String?
+  foto      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+}
