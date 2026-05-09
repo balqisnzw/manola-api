@@ -32,6 +32,10 @@
                     "nama": {
                         "type": "string"
                     },
+                    "foto": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "role": {
                         "type": "string",
                         "enum": [
@@ -41,6 +45,10 @@
                             "PACKAGING",
                             "USER"
                         ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             },
@@ -54,13 +62,268 @@
                         "type": "string"
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "price": {
                         "type": "integer"
                     },
                     "category": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "supplierId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductImage"
+                        }
+                    },
+                    "variants": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductVariant"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ProductImage": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "url": {
                         "type": "string"
+                    }
+                }
+            },
+            "ProductVariant": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "size": {
+                        "type": "string"
+                    },
+                    "color": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "stock": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Supplier": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "no_telepon": {
+                        "type": "string"
+                    },
+                    "alamat": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Order": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "integer"
+                    },
+                    "total_harga": {
+                        "type": "integer"
+                    },
+                    "ongkos_kirim": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "DIPROSES",
+                            "DIKIRIM",
+                            "SELESAI"
+                        ]
+                    },
+                    "jenis": {
+                        "type": "string",
+                        "enum": [
+                            "ONLINE",
+                            "OFFLINE"
+                        ]
+                    },
+                    "alamat_pengiriman": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "catatan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderItem"
+                        }
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "OrderItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "orderId": {
+                        "type": "integer"
+                    },
+                    "productId": {
+                        "type": "integer"
+                    },
+                    "variantId": {
+                        "type": "integer"
+                    },
+                    "jumlah": {
+                        "type": "integer"
+                    },
+                    "harga_satuan": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Payment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "orderId": {
+                        "type": "integer"
+                    },
+                    "metode_pembayaran": {
+                        "type": "string",
+                        "enum": [
+                            "CASH",
+                            "QRIS",
+                            "MIDTRANS"
+                        ]
+                    },
+                    "status_pembayaran": {
+                        "type": "string",
+                        "enum": [
+                            "MENUNGGU",
+                            "BERHASIL",
+                            "GAGAL"
+                        ]
+                    },
+                    "midtrans_token": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Restock": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "productVariantId": {
+                        "type": "integer"
+                    },
+                    "supplierId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "jumlah": {
+                        "type": "integer"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Wishlist": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "integer"
+                    },
+                    "productId": {
+                        "type": "integer"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Review": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "userId": {
+                        "type": "integer"
+                    },
+                    "productId": {
+                        "type": "integer"
+                    },
+                    "orderId": {
+                        "type": "integer"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                    },
+                    "komentar": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             }
@@ -92,6 +355,9 @@
                                     },
                                     "nama": {
                                         "type": "string"
+                                    },
+                                    "foto": {
+                                        "type": "string"
                                     }
                                 }
                             }
@@ -101,6 +367,9 @@
                 "responses": {
                     "201": {
                         "description": "User berhasil terdaftar"
+                    },
+                    "400": {
+                        "description": "Email sudah terdaftar atau input tidak valid"
                     }
                 }
             }
@@ -134,7 +403,77 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login berhasil, mengembalikan token"
+                        "description": "Login berhasil, mengembalikan token dan data user"
+                    },
+                    "401": {
+                        "description": "Email atau password salah"
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Request link reset password",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pesan sukses terlepas dari email terdaftar atau tidak"
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset password menggunakan token",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "token",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password berhasil direset"
+                    },
+                    "400": {
+                        "description": "Token tidak valid atau expired"
                     }
                 }
             }
@@ -145,9 +484,42 @@
                     "Products"
                 ],
                 "summary": "Mendapatkan daftar produk",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "minPrice",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "maxPrice",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Daftar produk"
+                        "description": "Daftar produk",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Product"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -166,15 +538,25 @@
                         "multipart/form-data": {
                             "schema": {
                                 "type": "object",
+                                "required": [
+                                    "name",
+                                    "price"
+                                ],
                                 "properties": {
                                     "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
                                         "type": "string"
                                     },
                                     "price": {
                                         "type": "integer"
                                     },
-                                    "description": {
+                                    "category": {
                                         "type": "string"
+                                    },
+                                    "supplierId": {
+                                        "type": "integer"
                                     },
                                     "photos": {
                                         "type": "array",
@@ -182,6 +564,10 @@
                                             "type": "string",
                                             "format": "binary"
                                         }
+                                    },
+                                    "variants": {
+                                        "type": "string",
+                                        "description": "JSON string of array of variants, e.g. '[{\"size\":\"M\", \"stock\":10}]'"
                                     }
                                 }
                             }
@@ -195,7 +581,305 @@
                 }
             }
         },
+        "/products/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Mendapatkan detail produk",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Product"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Mengupdate produk (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "integer"
+                                    },
+                                    "category": {
+                                        "type": "string"
+                                    },
+                                    "supplierId": {
+                                        "type": "integer"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "variants": {
+                                        "type": "string",
+                                        "description": "JSON string of array of variants to replace current ones"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Menghapus produk (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/products/{id}/variants": {
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Menambah variant ke produk",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "size",
+                                    "stock"
+                                ],
+                                "properties": {
+                                    "size": {
+                                        "type": "string"
+                                    },
+                                    "color": {
+                                        "type": "string"
+                                    },
+                                    "stock": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Variant berhasil ditambah"
+                    }
+                }
+            }
+        },
+        "/products/variants/{variantId}": {
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update data variant",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "variantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "size": {
+                                        "type": "string"
+                                    },
+                                    "color": {
+                                        "type": "string"
+                                    },
+                                    "stock": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Variant berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Hapus variant",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "variantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Variant berhasil dihapus"
+                    }
+                }
+            }
+        },
         "/orders": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Mendapatkan daftar pesanan",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DIPROSES",
+                                "DIKIRIM",
+                                "SELESAI"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "jenis",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ONLINE",
+                                "OFFLINE"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar pesanan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Order"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "Orders"
@@ -211,13 +895,41 @@
                         "application/json": {
                             "schema": {
                                 "type": "object",
+                                "required": [
+                                    "items",
+                                    "jenis"
+                                ],
                                 "properties": {
+                                    "jenis": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ONLINE",
+                                            "OFFLINE"
+                                        ]
+                                    },
+                                    "alamat_pengiriman": {
+                                        "type": "string"
+                                    },
+                                    "ongkos_kirim": {
+                                        "type": "integer"
+                                    },
+                                    "catatan": {
+                                        "type": "string"
+                                    },
                                     "items": {
                                         "type": "array",
                                         "items": {
                                             "type": "object",
+                                            "required": [
+                                                "productId",
+                                                "variantId",
+                                                "jumlah"
+                                            ],
                                             "properties": {
                                                 "productId": {
+                                                    "type": "integer"
+                                                },
+                                                "variantId": {
                                                     "type": "integer"
                                                 },
                                                 "jumlah": {
@@ -225,13 +937,6 @@
                                                 }
                                             }
                                         }
-                                    },
-                                    "jenis": {
-                                        "type": "string",
-                                        "enum": [
-                                            "ONLINE",
-                                            "OFFLINE"
-                                        ]
                                     }
                                 }
                             }
@@ -241,6 +946,358 @@
                 "responses": {
                     "201": {
                         "description": "Pesanan berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Mendapatkan detail pesanan",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Order"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}/status": {
+            "put": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Mengupdate status pesanan",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "DIPROSES",
+                                            "DIKIRIM",
+                                            "SELESAI"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status berhasil diupdate"
+                    }
+                }
+            }
+        },
+        "/payments": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Daftar pembayaran (Admin/Owner/Kasir)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "status_pembayaran",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "MENUNGGU",
+                                "BERHASIL",
+                                "GAGAL"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "metode_pembayaran",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "CASH",
+                                "QRIS",
+                                "MIDTRANS"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar pembayaran"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Membuat data pembayaran untuk order",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "orderId",
+                                    "metode_pembayaran"
+                                ],
+                                "properties": {
+                                    "orderId": {
+                                        "type": "integer"
+                                    },
+                                    "metode_pembayaran": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CASH",
+                                            "QRIS",
+                                            "MIDTRANS"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pembayaran berhasil dicatat"
+                    }
+                }
+            }
+        },
+        "/payments/{id}/status": {
+            "put": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Update status pembayaran",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "status_pembayaran"
+                                ],
+                                "properties": {
+                                    "status_pembayaran": {
+                                        "type": "string",
+                                        "enum": [
+                                            "MENUNGGU",
+                                            "BERHASIL",
+                                            "GAGAL"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status pembayaran diupdate"
+                    }
+                }
+            }
+        },
+        "/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Daftar supplier (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar supplier"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Tambah supplier baru",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "nama",
+                                    "no_telepon"
+                                ],
+                                "properties": {
+                                    "nama": {
+                                        "type": "string"
+                                    },
+                                    "no_telepon": {
+                                        "type": "string"
+                                    },
+                                    "alamat": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier berhasil ditambah"
+                    }
+                }
+            }
+        },
+        "/suppliers/{id}": {
+            "put": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Update data supplier",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nama": {
+                                        "type": "string"
+                                    },
+                                    "no_telepon": {
+                                        "type": "string"
+                                    },
+                                    "alamat": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier berhasil diupdate"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Hapus supplier",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier berhasil dihapus"
                     }
                 }
             }
@@ -261,14 +1318,169 @@
                         "description": "Daftar karyawan"
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Tambah akun karyawan baru (Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "nama",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "nama": {
+                                        "type": "string"
+                                    },
+                                    "foto": {
+                                        "type": "string"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ADMIN",
+                                            "KASIR",
+                                            "PACKAGING"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Karyawan berhasil ditambah"
+                    }
+                }
             }
         },
-        "/suppliers": {
+        "/employees/{id}": {
+            "delete": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Hapus akun karyawan",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Karyawan berhasil dihapus"
+                    }
+                }
+            }
+        },
+        "/restocks": {
             "get": {
                 "tags": [
-                    "Suppliers"
+                    "Restocks"
                 ],
-                "summary": "Daftar supplier (Admin/Owner)",
+                "summary": "Histori restock (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "productVariantId",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "supplierId",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar histori restock"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Restocks"
+                ],
+                "summary": "Input restock produk (Tambah stok)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "productVariantId",
+                                    "jumlah"
+                                ],
+                                "properties": {
+                                    "productVariantId": {
+                                        "type": "integer"
+                                    },
+                                    "supplierId": {
+                                        "type": "integer"
+                                    },
+                                    "jumlah": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Restock berhasil dicatat dan stok bertambah"
+                    }
+                }
+            }
+        },
+        "/wishlists": {
+            "get": {
+                "tags": [
+                    "Wishlists"
+                ],
+                "summary": "Daftar wishlist user",
                 "security": [
                     {
                         "bearerAuth": []
@@ -276,7 +1488,139 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daftar supplier"
+                        "description": "Daftar wishlist"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Wishlists"
+                ],
+                "summary": "Tambah produk ke wishlist",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "productId"
+                                ],
+                                "properties": {
+                                    "productId": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Berhasil ditambah ke wishlist"
+                    }
+                }
+            }
+        },
+        "/wishlists/{id}": {
+            "delete": {
+                "tags": [
+                    "Wishlists"
+                ],
+                "summary": "Hapus dari wishlist",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil dihapus dari wishlist"
+                    }
+                }
+            }
+        },
+        "/reviews": {
+            "post": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Berikan ulasan untuk produk",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "productId",
+                                    "orderId",
+                                    "rating"
+                                ],
+                                "properties": {
+                                    "productId": {
+                                        "type": "integer"
+                                    },
+                                    "orderId": {
+                                        "type": "integer"
+                                    },
+                                    "rating": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 5
+                                    },
+                                    "komentar": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ulasan berhasil disimpan"
+                    }
+                }
+            }
+        },
+        "/reviews/products/{productId}": {
+            "get": {
+                "tags": [
+                    "Reviews"
+                ],
+                "summary": "Daftar ulasan produk",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar ulasan"
                     }
                 }
             }
