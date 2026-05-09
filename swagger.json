@@ -1,0 +1,285 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Manola API",
+        "description": "Dokumentasi API untuk sistem manajemen toko Manola",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000/api",
+            "description": "Local server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "nama": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "OWNER",
+                            "ADMIN",
+                            "KASIR",
+                            "PACKAGING",
+                            "USER"
+                        ]
+                    }
+                }
+            },
+            "Product": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "integer"
+                    },
+                    "category": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Mendaftarkan user baru",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "nama"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "nama": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User berhasil terdaftar"
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login berhasil, mengembalikan token"
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Mendapatkan daftar produk",
+                "responses": {
+                    "200": {
+                        "description": "Daftar produk"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Membuat produk baru (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "integer"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "photos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Produk berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Membuat pesanan baru",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "productId": {
+                                                    "type": "integer"
+                                                },
+                                                "jumlah": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "jenis": {
+                                        "type": "string",
+                                        "enum": [
+                                            "ONLINE",
+                                            "OFFLINE"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Pesanan berhasil dibuat"
+                    }
+                }
+            }
+        },
+        "/employees": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Daftar karyawan (Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar karyawan"
+                    }
+                }
+            }
+        },
+        "/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Daftar supplier (Admin/Owner)",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Daftar supplier"
+                    }
+                }
+            }
+        }
+    }
+}
