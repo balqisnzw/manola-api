@@ -29,7 +29,7 @@ exports.getProduct = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, categoryId, supplierId, variants } = req.body;
+    const { name, description, price, category, supplierId, variants } = req.body;
 
     let variantsData = [];
     if (variants) {
@@ -44,7 +44,7 @@ exports.createProduct = async (req, res) => {
       name,
       description,
       price: parseInt(price),
-      category: categoryId ? { connect: { id: parseInt(categoryId) } } : undefined,
+      category: category || null,
       supplier: supplierId ? { connect: { id: parseInt(supplierId) } } : undefined,
       images: {
         create: imagesData,
@@ -70,15 +70,13 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const { name, description, price, categoryId, supplierId, variants } = req.body;
+    const { name, description, price, category, supplierId, variants } = req.body;
     
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseInt(price);
-    if (categoryId !== undefined) {
-      updateData.category = categoryId ? { connect: { id: parseInt(categoryId) } } : { disconnect: true };
-    }
+    if (category !== undefined) updateData.category = category || null;
     if (supplierId !== undefined) {
       updateData.supplier = supplierId ? { connect: { id: parseInt(supplierId) } } : { disconnect: true };
     }
@@ -98,7 +96,7 @@ exports.updateProduct = async (req, res) => {
       };
     }
 
-    // Handle variants update
+    // Handle variants update (bulk replace)
     if (variants) {
       const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
       updateData.variants = {
@@ -135,6 +133,58 @@ exports.deleteProduct = async (req, res) => {
 
     await productService.deleteProduct(id);
     res.json({ message: "Product deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// === Variant Management ===
+
+exports.addVariant = async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const product = await productService.getProductById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const { size, color, stock } = req.body;
+    const variant = await productService.addVariant(productId, { size, color, stock });
+    res.status(201).json(variant);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.editVariant = async (req, res) => {
+  try {
+    const variantId = parseInt(req.params.variantId);
+    const existing = await productService.getVariantById(variantId);
+
+    if (!existing) {
+      return res.status(404).json({ message: "Variant not found" });
+    }
+
+    const { size, color, stock } = req.body;
+    const updatedVariant = await productService.updateVariant(variantId, { size, color, stock });
+    res.json(updatedVariant);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.removeVariant = async (req, res) => {
+  try {
+    const variantId = parseInt(req.params.variantId);
+    const existing = await productService.getVariantById(variantId);
+
+    if (!existing) {
+      return res.status(404).json({ message: "Variant not found" });
+    }
+
+    await productService.deleteVariant(variantId);
+    res.json({ message: "Variant deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

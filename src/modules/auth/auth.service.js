@@ -12,7 +12,41 @@ const createUser = async (data) => {
   });
 };
 
+const updateUserPassword = async (email, hashedPassword) => {
+  return await prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+};
+
+// === Reset Password Token ===
+
+const createResetToken = async (email, token, expiresAt) => {
+  // Hapus token lama untuk email ini (jika ada)
+  await prisma.resetPasswordToken.deleteMany({ where: { email } });
+
+  return await prisma.resetPasswordToken.create({
+    data: { email, token, expiresAt },
+  });
+};
+
+const findResetToken = async (token) => {
+  return await prisma.resetPasswordToken.findUnique({
+    where: { token },
+  });
+};
+
+const deleteResetToken = async (token) => {
+  return await prisma.resetPasswordToken.delete({
+    where: { token },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
+  updateUserPassword,
+  createResetToken,
+  findResetToken,
+  deleteResetToken,
 };

@@ -33,4 +33,26 @@ router.delete(
   productController.deleteProduct
 );
 
-module.exports = router;
+// === Variant Management (OWNER dan ADMIN) ===
+router.post(
+  "/:id/variants",
+  verifyToken,
+  checkRole("OWNER", "ADMIN"),
+  productController.addVariant
+);
+
+router.put(
+  "/variants/:variantId",
+  verifyToken,
+  checkRole("OWNER", "ADMIN"),
+  productController.editVariant
+);
+
+router.delete(
+  "/variants/:variantId",
+  verifyToken,
+  checkRole("OWNER", "ADMIN"),
+  productController.removeVariant
+);
+
+module.exports = router;

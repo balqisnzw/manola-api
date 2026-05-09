@@ -12,25 +12,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  products  Product[]
-  createdAt DateTime  @default(now())
-}
-
 model Product {
   id          Int              @id @default(autoincrement())
   name        String
   description String?
   price       Int
-  categoryId  Int?
-  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category    String?
   supplierId  Int?
   supplier    Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   images      ProductImage[]
   variants    ProductVariant[]
   orderItems  OrderItem[]
+  wishlists   Wishlist[]
+  reviews     Review[]
   createdAt   DateTime         @default(now())
 }
 
@@ -42,12 +36,13 @@ model ProductImage {
 }
 
 model ProductVariant {
-  id        Int     @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   size      String // S, M, L, XL
   color     String? // Opsional: Hitam, Merah, dll.
   stock     Int
   productId Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  restocks  Restock[]
 }
 
 enum Role {
@@ -59,14 +54,16 @@ enum Role {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
   password  String
   nama      String
   foto      String?
-  role      Role     @default(USER)
+  role      Role       @default(USER)
   orders    Order[]
-  createdAt DateTime @default(now())
+  wishlists Wishlist[]
+  reviews   Review[]
+  createdAt DateTime   @default(now())
 }
 
 model Supplier {
@@ -75,6 +72,7 @@ model Supplier {
   no_telepon String
   alamat     String?
   products   Product[]
+  restocks   Restock[]
   createdAt  DateTime  @default(now())
 }
 
@@ -113,6 +111,7 @@ model Order {
   catatan           String?
   items             OrderItem[]
   payment           Payment?
+  reviews           Review[]
   createdAt         DateTime    @default(now())
 }
 
@@ -134,4 +133,48 @@ model Payment {
   status_pembayaran PaymentStatus @default(MENUNGGU)
   midtrans_token    String?
   createdAt         DateTime      @default(now())
+}
+
+model Restock {
+  id               Int            @id @default(autoincrement())
+  productVariantId Int
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  supplierId       Int?
+  supplier         Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  jumlah           Int
+  createdAt        DateTime       @default(now())
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  rating    Int // 1 sampai 5
+  komentar  String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId, orderId])
+}
+
+model ResetPasswordToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

@@ -1,12 +1,15 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const authService = require("./auth.service");
+const { sendResetPasswordEmail } = require("../../libs/mailer");
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey_manola123";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, nama, alamat, foto, role } = req.body;
+    const { email, password, nama, foto } = req.body;
 
     // Cek apakah email sudah terdaftar
     const existingUser = await authService.findUserByEmail(email);
@@ -18,14 +21,12 @@ exports.register = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Buat user baru
+    // Buat user baru (role default: USER)
     const newUser = await authService.createUser({
       email,
       password: hashedPassword,
       nama,
-      alamat,
       foto,
-      role,
     });
 
     // Hilangkan password dari response
@@ -71,6 +72,67 @@ exports.login = async (req, res) => {
       token,
       user: userWithoutPassword,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Cek apakah email terdaftar
+    const user = await authService.findUserByEmail(email);
+    if (!user) {
+      // Tetap kirim response sukses agar tidak bisa digunakan untuk cek email terdaftar
+      return res.json({ message: "Jika email terdaftar, link reset password telah dikirim" });
+    }
+
+    // Generate token random
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 jam dari sekarang
+
+    // Simpan token ke database
+    await authService.createResetToken(email, token, expiresAt);
+
+    // Kirim email
+    const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
+    await sendResetPasswordEmail(email, resetLink);
+
+    res.json({ message: "Jika email terdaftar, link reset password telah dikirim" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    // Cari token di database
+    const resetToken = await authService.findResetToken(token);
+    if (!resetToken) {
+      return res.status(400).json({ message: "Token tidak valid atau sudah digunakan" });
+    }
+
+    // Cek apakah token sudah expired
+    if (new Date() > resetToken.expiresAt) {
+      // Hapus token yang expired
+      await authService.deleteResetToken(token);
+      return res.status(400).json({ message: "Token sudah expired. Silakan request ulang" });
+    }
+
+    // Hash password baru
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Update password user
+    await authService.updateUserPassword(resetToken.email, hashedPassword);
+
+    // Hapus token setelah berhasil digunakan
+    await authService.deleteResetToken(token);
+
+    res.json({ message: "Password berhasil direset" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

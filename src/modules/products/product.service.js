@@ -5,7 +5,7 @@ const getAllProducts = async (filters = {}) => {
   const where = {};
 
   if (category) {
-    where.category = { name: category };
+    where.category = { contains: category, mode: "insensitive" };
   }
 
   if (minPrice || maxPrice) {
@@ -17,7 +17,6 @@ const getAllProducts = async (filters = {}) => {
   return await prisma.product.findMany({
     where,
     include: {
-      category: true,
       images: true,
       variants: true,
       supplier: true,
@@ -30,7 +29,6 @@ const getProductById = async (id) => {
   return await prisma.product.findUnique({
     where: { id },
     include: {
-      category: true,
       images: true,
       variants: true,
       supplier: true,
@@ -42,7 +40,6 @@ const createProduct = async (data) => {
   return await prisma.product.create({
     data,
     include: {
-      category: true,
       images: true,
       variants: true,
       supplier: true,
@@ -55,7 +52,6 @@ const updateProduct = async (id, data) => {
     where: { id },
     data,
     include: {
-      category: true,
       images: true,
       variants: true,
       supplier: true,
@@ -72,10 +68,51 @@ const deleteProduct = async (id) => {
   });
 };
 
+// === Variant Management ===
+
+const addVariant = async (productId, variantData) => {
+  return await prisma.productVariant.create({
+    data: {
+      productId,
+      size: variantData.size,
+      color: variantData.color || null,
+      stock: parseInt(variantData.stock),
+    },
+  });
+};
+
+const updateVariant = async (variantId, variantData) => {
+  const data = {};
+  if (variantData.size !== undefined) data.size = variantData.size;
+  if (variantData.color !== undefined) data.color = variantData.color;
+  if (variantData.stock !== undefined) data.stock = parseInt(variantData.stock);
+
+  return await prisma.productVariant.update({
+    where: { id: variantId },
+    data,
+  });
+};
+
+const deleteVariant = async (variantId) => {
+  return await prisma.productVariant.delete({
+    where: { id: variantId },
+  });
+};
+
+const getVariantById = async (variantId) => {
+  return await prisma.productVariant.findUnique({
+    where: { id: variantId },
+  });
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
+  addVariant,
+  updateVariant,
+  deleteVariant,
+  getVariantById,
 };
