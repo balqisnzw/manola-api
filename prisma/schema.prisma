@@ -12,14 +12,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
 model Product {
-  id           Int      @id @default(autoincrement())
-  name_product String
-  price        Int
-  color        String
-  size         String
-  stock        Int
-  createdAt    DateTime @default(now()) //ini kalau bisa jamnya sesuai local/indo (UTC +7)
+  id          Int              @id @default(autoincrement())
+  name        String
+  description String?
+  price       Int
+  categoryId  Int?
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplierId  Int?
+  supplier    Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  images      ProductImage[]
+  variants    ProductVariant[]
+  orderItems  OrderItem[]
+  createdAt   DateTime         @default(now())
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductVariant {
+  id        Int     @id @default(autoincrement())
+  size      String // S, M, L, XL
+  color     String? // Opsional: Hitam, Merah, dll.
+  stock     Int
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
@@ -35,8 +63,75 @@ model User {
   email     String   @unique
   password  String
   nama      String
-  alamat    String?
   foto      String?
   role      Role     @default(USER)
+  orders    Order[]
   createdAt DateTime @default(now())
+}
+
+model Supplier {
+  id         Int       @id @default(autoincrement())
+  nama       String
+  no_telepon String
+  alamat     String?
+  products   Product[]
+  createdAt  DateTime  @default(now())
+}
+
+enum OrderStatus {
+  DIPROSES
+  DIKIRIM
+  SELESAI
+}
+
+enum OrderType {
+  ONLINE
+  OFFLINE
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  MIDTRANS
+}
+
+enum PaymentStatus {
+  MENUNGGU
+  BERHASIL
+  GAGAL
+}
+
+model Order {
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  user              User        @relation(fields: [userId], references: [id])
+  total_harga       Int
+  ongkos_kirim      Int?
+  status            OrderStatus @default(DIPROSES)
+  jenis             OrderType
+  alamat_pengiriman String?
+  catatan           String?
+  items             OrderItem[]
+  payment           Payment?
+  createdAt         DateTime    @default(now())
+}
+
+model OrderItem {
+  id           Int     @id @default(autoincrement())
+  orderId      Int
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    Int
+  product      Product @relation(fields: [productId], references: [id])
+  jumlah       Int
+  harga_satuan Int
+}
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  orderId           Int           @unique
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  metode_pembayaran PaymentMethod
+  status_pembayaran PaymentStatus @default(MENUNGGU)
+  midtrans_token    String?
+  createdAt         DateTime      @default(now())
 }
