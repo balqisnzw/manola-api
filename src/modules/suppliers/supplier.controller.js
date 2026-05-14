@@ -3,9 +3,16 @@ const supplierService = require("./supplier.service");
 exports.getSuppliers = async (req, res) => {
   try {
     const suppliers = await supplierService.getAllSuppliers();
-    res.json(suppliers);
+    res.json({
+      status: "OK",
+      message: "Success Get Data Supplier",
+      data: suppliers,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Get Data Supplier",
+    });
   }
 };
 
@@ -15,12 +22,22 @@ exports.getSupplier = async (req, res) => {
     const supplier = await supplierService.getSupplierById(id);
 
     if (!supplier) {
-      return res.status(404).json({ message: "Supplier tidak ditemukan" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Supplier Not Found",
+      });
     }
 
-    res.json(supplier);
+    res.json({
+      status: "OK",
+      message: "Success Get Data Supplier",
+      data: supplier,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Get Data Supplier",
+    });
   }
 };
 
@@ -28,8 +45,11 @@ exports.createSupplier = async (req, res) => {
   try {
     const { nama, no_telepon, alamat } = req.body;
 
-    if (!nama || !no_telepon) {
-      return res.status(400).json({ message: "Nama dan no_telepon wajib diisi" });
+    if (!nama || !no_telepon || !alamat) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Name, Phone Number, And Address Are Required",
+      });
     }
 
     const newSupplier = await supplierService.createSupplier({
@@ -38,9 +58,16 @@ exports.createSupplier = async (req, res) => {
       alamat,
     });
 
-    res.status(201).json(newSupplier);
+    res.status(201).json({
+      status: "OK",
+      message: "Success Create Supplier",
+      data: newSupplier,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Create Supplier",
+    });
   }
 };
 
@@ -50,7 +77,10 @@ exports.updateSupplier = async (req, res) => {
 
     const existing = await supplierService.getSupplierById(id);
     if (!existing) {
-      return res.status(404).json({ message: "Supplier tidak ditemukan" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Supplier Not Found",
+      });
     }
 
     const { nama, no_telepon, alamat } = req.body;
@@ -61,9 +91,16 @@ exports.updateSupplier = async (req, res) => {
     if (alamat !== undefined) updateData.alamat = alamat;
 
     const updatedSupplier = await supplierService.updateSupplier(id, updateData);
-    res.json(updatedSupplier);
+    res.json({
+      status: "OK",
+      message: "Success Update Supplier",
+      data: updatedSupplier,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Update Supplier",
+    });
   }
 };
 
@@ -73,12 +110,21 @@ exports.deleteSupplier = async (req, res) => {
 
     const existing = await supplierService.getSupplierById(id);
     if (!existing) {
-      return res.status(404).json({ message: "Supplier tidak ditemukan" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Supplier Not Found",
+      });
     }
 
     await supplierService.deleteSupplier(id);
-    res.json({ message: "Supplier berhasil dihapus" });
+    res.json({
+      status: "OK",
+      message: "Success Delete Supplier",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Delete Supplier",
+    });
   }
 };

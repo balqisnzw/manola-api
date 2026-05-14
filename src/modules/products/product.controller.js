@@ -5,47 +5,93 @@ const path = require("path");
 exports.getProducts = async (req, res) => {
   try {
     const { category, minPrice, maxPrice } = req.query;
-    const products = await productService.getAllProducts({ category, minPrice, maxPrice });
-    res.json(products);
+
+    const products = await productService.getAllProducts({
+      category,
+      minPrice,
+      maxPrice,
+    });
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Get Data Products",
+      data: products,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Get Data Products",
+    });
   }
 };
 
 exports.getProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
     const product = await productService.getProductById(id);
 
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Product Not Found",
+      });
     }
 
-    res.json(product);
+    res.status(200).json({
+      status: "OK",
+      message: "Success Get Data Product",
+      data: product,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Get Data Product",
+    });
   }
 };
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, supplierId, variants } = req.body;
+    const { name, description, price, category, supplierId, variants } =
+      req.body;
 
-    let variantsData = [];
-    if (variants) {
-      // variants dikirim sebagai JSON string jika via form-data
-      const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
-      variantsData = parsedVariants.map(v => ({ size: v.size, color: v.color || null, stock: parseInt(v.stock) }));
+    if (!name || !description || !price) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Name, Description, And Price Are Required",
+      });
     }
 
-    const imagesData = req.files ? req.files.map(f => ({ url: `/uploads/${f.filename}` })) : [];
+    let variantsData = [];
+
+    if (variants) {
+      const parsedVariants =
+        typeof variants === "string" ? JSON.parse(variants) : variants;
+
+      variantsData = parsedVariants.map((v) => ({
+        size: v.size,
+        color: v.color || null,
+        stock: parseInt(v.stock),
+      }));
+    }
+
+    const imagesData = req.files
+      ? req.files.map((f) => ({
+          url: `/uploads/${f.filename}`,
+        }))
+      : [];
 
     const data = {
       name,
       description,
       price: parseInt(price),
       category: category || null,
-      supplier: supplierId ? { connect: { id: parseInt(supplierId) } } : undefined,
+      supplier: supplierId
+        ? {
+            connect: { id: parseInt(supplierId) },
+          }
+        : undefined,
       images: {
         create: imagesData,
       },
@@ -55,76 +101,126 @@ exports.createProduct = async (req, res) => {
     };
 
     const newProduct = await productService.createProduct(data);
-    res.status(201).json(newProduct);
+
+    res.status(201).json({
+      status: "OK",
+      message: "Success Create Product",
+      data: newProduct,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Create Product",
+    });
   }
 };
 
 exports.updateProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
     const existing = await productService.getProductById(id);
 
     if (!existing) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Product Not Found",
+      });
     }
 
-    const { name, description, price, category, supplierId, variants } = req.body;
-    
+    const { name, description, price, category, supplierId, variants } =
+      req.body;
+
     const updateData = {};
+
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseInt(price);
     if (category !== undefined) updateData.category = category || null;
+
     if (supplierId !== undefined) {
-      updateData.supplier = supplierId ? { connect: { id: parseInt(supplierId) } } : { disconnect: true };
+      updateData.supplier = supplierId
+        ? {
+            connect: { id: parseInt(supplierId) },
+          }
+        : { disconnect: true };
     }
 
     // Handle image update
     if (req.files && req.files.length > 0) {
-      // Delete old files from storage
       if (existing.images) {
-        existing.images.forEach(img => {
-          const filePath = path.join(__dirname, "../../public", img.url);
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        existing.images.forEach((img) => {
+          const filePath = path.join(
+            __dirname,
+            "../../public",
+            img.url
+          );
+
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
         });
       }
+
       updateData.images = {
         deleteMany: {},
-        create: req.files.map(f => ({ url: `/uploads/${f.filename}` })),
+        create: req.files.map((f) => ({
+          url: `/uploads/${f.filename}`,
+        })),
       };
     }
 
-    // Handle variants update (bulk replace)
+    // Handle variants update
     if (variants) {
-      const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
+      const parsedVariants =
+        typeof variants === "string" ? JSON.parse(variants) : variants;
+
       updateData.variants = {
         deleteMany: {},
-        create: parsedVariants.map(v => ({ size: v.size, color: v.color || null, stock: parseInt(v.stock) })),
+        create: parsedVariants.map((v) => ({
+          size: v.size,
+          color: v.color || null,
+          stock: parseInt(v.stock),
+        })),
       };
     }
 
-    const updatedProduct = await productService.updateProduct(id, updateData);
-    res.json(updatedProduct);
+    const updatedProduct = await productService.updateProduct(
+      id,
+      updateData
+    );
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Update Product",
+      data: updatedProduct,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Update Product",
+    });
   }
 };
 
 exports.deleteProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
     const existing = await productService.getProductById(id);
 
     if (!existing) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Product Not Found",
+      });
     }
 
-    // Hapus file gambar dari public folder
+    // Delete image files
     if (existing.images && existing.images.length > 0) {
-      existing.images.forEach(img => {
+      existing.images.forEach((img) => {
         const filePath = path.join(__dirname, "../../public", img.url);
+
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
@@ -132,9 +228,16 @@ exports.deleteProduct = async (req, res) => {
     }
 
     await productService.deleteProduct(id);
-    res.json({ message: "Product deleted successfully" });
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Delete Product",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Delete Product",
+    });
   }
 };
 
@@ -143,49 +246,101 @@ exports.deleteProduct = async (req, res) => {
 exports.addVariant = async (req, res) => {
   try {
     const productId = parseInt(req.params.id);
+
     const product = await productService.getProductById(productId);
 
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Product Not Found",
+      });
     }
 
     const { size, color, stock } = req.body;
-    const variant = await productService.addVariant(productId, { size, color, stock });
-    res.status(201).json(variant);
+
+    if (!size || !stock) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Size And Stock Are Required",
+      });
+    }
+
+    const variant = await productService.addVariant(productId, {
+      size,
+      color,
+      stock,
+    });
+
+    res.status(201).json({
+      status: "OK",
+      message: "Success Add Variant",
+      data: variant,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Add Variant",
+    });
   }
 };
 
 exports.editVariant = async (req, res) => {
   try {
     const variantId = parseInt(req.params.variantId);
+
     const existing = await productService.getVariantById(variantId);
 
     if (!existing) {
-      return res.status(404).json({ message: "Variant not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Variant Not Found",
+      });
     }
 
     const { size, color, stock } = req.body;
-    const updatedVariant = await productService.updateVariant(variantId, { size, color, stock });
-    res.json(updatedVariant);
+
+    const updatedVariant = await productService.updateVariant(variantId, {
+      size,
+      color,
+      stock,
+    });
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Update Variant",
+      data: updatedVariant,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Update Variant",
+    });
   }
 };
 
 exports.removeVariant = async (req, res) => {
   try {
     const variantId = parseInt(req.params.variantId);
+
     const existing = await productService.getVariantById(variantId);
 
     if (!existing) {
-      return res.status(404).json({ message: "Variant not found" });
+      return res.status(404).json({
+        status: "Failed",
+        message: "Variant Not Found",
+      });
     }
 
     await productService.deleteVariant(variantId);
-    res.json({ message: "Variant deleted successfully" });
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Delete Variant",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Delete Variant",
+    });
   }
 };

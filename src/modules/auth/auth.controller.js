@@ -20,7 +20,11 @@ exports.register = async (req, res) => {
     // Hash password menggunakan bcrypt
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    const validEmail = email.includes("@") && email.includes(".");
+    if (!validEmail) {
+      return res.status(400).json({ message: "Invalid Format Email" });
+    }
+    
     // Buat user baru (role default: USER)
     const newUser = await authService.createUser({
       email,
