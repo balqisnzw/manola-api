@@ -141,3 +141,17 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getUsers = async (req, res) => {
+  try {
+    const { role } = req.query;
+    const users = await authService.getAllUsers(role);
+    res.json({
+      status: "OK",
+      message: "Success Get Data Users",
+      data: users,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

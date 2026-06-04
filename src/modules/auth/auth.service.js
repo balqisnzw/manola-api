@@ -42,6 +42,24 @@ const deleteResetToken = async (token) => {
   });
 };
 
+const getAllUsers = async (role) => {
+  const where = {};
+  if (role) where.role = role;
+
+  return await prisma.user.findMany({
+    where,
+    select: {
+      id: true,
+      email: true,
+      nama: true,
+      foto: true,
+      role: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
 module.exports = {
   findUserByEmail,
   createUser,
@@ -49,4 +67,5 @@ module.exports = {
   createResetToken,
   findResetToken,
   deleteResetToken,
+  getAllUsers,
 };

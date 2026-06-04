@@ -18,7 +18,7 @@ const createRestock = async (data) => {
   }
 
   // Gunakan transaksi: insert restock + increment stok
-  return await prisma.$transaction(async (tx) => {
+  const restock = await prisma.$transaction(async (tx) => {
     // Tambah stok di variant
     await tx.productVariant.update({
       where: { id: productVariantId },
@@ -26,7 +26,7 @@ const createRestock = async (data) => {
     });
 
     // Simpan data restock
-    const restock = await tx.restock.create({
+    const newRestock = await tx.restock.create({
       data: {
         productVariantId,
         supplierId: supplierId || null,
@@ -40,8 +40,25 @@ const createRestock = async (data) => {
       },
     });
 
-    return restock;
+    return newRestock;
   });
+
+  // Auto-delete riwayat lama jika total melebihi 100
+  const totalCount = await prisma.restock.count();
+  if (totalCount > 100) {
+    const kelebihan = totalCount - 100;
+    const riwayatLama = await prisma.restock.findMany({
+      orderBy: { createdAt: "asc" },
+      take: kelebihan,
+      select: { id: true },
+    });
+    const idLama = riwayatLama.map((r) => r.id);
+    await prisma.restock.deleteMany({
+      where: { id: { in: idLama } },
+    });
+  }
+
+  return restock;
 };
 
 const getAllRestocks = async (filters = {}) => {
@@ -63,7 +80,41 @@ const getAllRestocks = async (filters = {}) => {
   });
 };
 
+const deleteRestock = async (id) => {
+  // Cek apakah riwayat restock ada
+  const restock = await prisma.restock.findUnique({
+    where: { id },
+  });
+
+  if (!restock) {
+    throw new Error("Riwayat restock tidak ditemukan");
+  }
+
+  // Gunakan transaksi: kurangi stok variant + hapus riwayat
+  return await prisma.$transaction(async (tx) => {
+    // Kurangi stok di variant sebesar jumlah yang direstock
+    await tx.productVariant.update({
+      where: { id: restock.productVariantId },
+      data: { stock: { decrement: restock.jumlah } },
+    });
+
+    // Hapus riwayat restock
+    const deleted = await tx.restock.delete({
+      where: { id },
+      include: {
+        variant: {
+          include: { product: true },
+        },
+        supplier: true,
+      },
+    });
+
+    return deleted;
+  });
+};
+
 module.exports = {
   createRestock,
   getAllRestocks,
+  deleteRestock,
 };

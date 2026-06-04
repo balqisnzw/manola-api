@@ -47,7 +47,11 @@ const createPayment = async (data) => {
       order: {
         include: {
           items: {
-            include: { product: true },
+            include: {
+              variant: {
+                include: { product: true },
+              },
+            },
           },
           user: {
             select: { id: true, nama: true, email: true },
@@ -71,7 +75,11 @@ const getAllPayments = async (filters = {}) => {
       order: {
         include: {
           items: {
-            include: { product: true },
+            include: {
+              variant: {
+                include: { product: true },
+              },
+            },
           },
           user: {
             select: { id: true, nama: true, email: true },
@@ -90,7 +98,11 @@ const getPaymentById = async (id) => {
       order: {
         include: {
           items: {
-            include: { product: true },
+            include: {
+              variant: {
+                include: { product: true },
+              },
+            },
           },
           user: {
             select: { id: true, nama: true, email: true },
@@ -119,7 +131,11 @@ const updatePaymentStatus = async (id, status_pembayaran) => {
       order: {
         include: {
           items: {
-            include: { product: true },
+            include: {
+              variant: {
+                include: { product: true },
+              },
+            },
           },
           user: {
             select: { id: true, nama: true, email: true },

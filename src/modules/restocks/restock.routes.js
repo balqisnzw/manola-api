@@ -13,4 +13,7 @@ router.post("/", restockController.createRestock);
 // Melihat histori restock
 router.get("/", restockController.getRestocks);
 
+// Hapus riwayat restock berdasarkan ID (stok variant otomatis dikurangi)
+router.delete("/:id", restockController.deleteRestock);
+
 module.exports = router;

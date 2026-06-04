@@ -11,7 +11,15 @@ const createReview = async (data) => {
   // Cek apakah order milik user dan statusnya SELESAI
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true },
+    include: {
+      items: {
+        include: {
+          variant: {
+            include: { product: true },
+          },
+        },
+      },
+    },
   });
 
   if (!order) {
@@ -26,8 +34,8 @@ const createReview = async (data) => {
     throw new Error("Anda hanya bisa memberikan ulasan untuk order yang sudah selesai");
   }
 
-  // Cek apakah product ada di dalam order items
-  const productInOrder = order.items.some((item) => item.productId === productId);
+  // Cek apakah product ada di dalam order items (melalui variant)
+  const productInOrder = order.items.some((item) => item.variant.productId === productId);
   if (!productInOrder) {
     throw new Error("Produk ini tidak ada dalam order tersebut");
   }

@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:3000/api",
+            "url": "http://localhost:4000/api",
             "description": "Local server"
         }
     ],
@@ -152,7 +152,16 @@
                         "type": "integer"
                     },
                     "userId": {
-                        "type": "integer"
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "kasirId": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "packagingId": {
+                        "type": "integer",
+                        "nullable": true
                     },
                     "total_harga": {
                         "type": "integer"
@@ -165,6 +174,7 @@
                         "type": "string",
                         "enum": [
                             "DIPROSES",
+                            "DIKEMAS",
                             "DIKIRIM",
                             "SELESAI"
                         ]
@@ -181,6 +191,14 @@
                         "nullable": true
                     },
                     "catatan": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "ekspedisi": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "resi": {
                         "type": "string",
                         "nullable": true
                     },
@@ -208,11 +226,11 @@
                     "orderId": {
                         "type": "integer"
                     },
-                    "productId": {
+                    "productVariantId": {
                         "type": "integer"
                     },
-                    "variantId": {
-                        "type": "integer"
+                    "variant": {
+                        "type": "object"
                     },
                     "jumlah": {
                         "type": "integer"
@@ -847,6 +865,7 @@
                             "type": "string",
                             "enum": [
                                 "DIPROSES",
+                                "DIKEMAS",
                                 "DIKIRIM",
                                 "SELESAI"
                             ]
@@ -900,6 +919,10 @@
                                     "jenis"
                                 ],
                                 "properties": {
+                                    "userId": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
                                     "jenis": {
                                         "type": "string",
                                         "enum": [
@@ -921,14 +944,10 @@
                                         "items": {
                                             "type": "object",
                                             "required": [
-                                                "productId",
                                                 "variantId",
                                                 "jumlah"
                                             ],
                                             "properties": {
-                                                "productId": {
-                                                    "type": "integer"
-                                                },
                                                 "variantId": {
                                                     "type": "integer"
                                                 },
@@ -1018,6 +1037,7 @@
                                         "type": "string",
                                         "enum": [
                                             "DIPROSES",
+                                            "DIKEMAS",
                                             "DIKIRIM",
                                             "SELESAI"
                                         ]
@@ -1525,6 +1545,68 @@
                 "responses": {
                     "201": {
                         "description": "Restock berhasil dicatat dan stok bertambah"
+                    }
+                }
+            }
+        },
+        "/restocks/{id}": {
+            "delete": {
+                "tags": [
+                    "Restocks"
+                ],
+                "summary": "Hapus riwayat restock dan kurangi stok variant (Admin/Owner)",
+                "description": "Menghapus riwayat restock berdasarkan ID. Stok ProductVariant terkait akan otomatis dikurangi sebesar jumlah yang ada di riwayat tersebut menggunakan Prisma transaction.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID riwayat restock"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Riwayat restock berhasil dihapus dan stok variant berkurang",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "OK"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Riwayat restock berhasil dihapus"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Restock"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID tidak valid"
+                    },
+                    "401": {
+                        "description": "Tidak terautentikasi"
+                    },
+                    "403": {
+                        "description": "Tidak memiliki akses (bukan OWNER/ADMIN)"
+                    },
+                    "404": {
+                        "description": "Riwayat restock tidak ditemukan"
                     }
                 }
             }

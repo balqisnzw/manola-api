@@ -51,3 +51,30 @@ exports.getRestocks = async (req, res) => {
     });
   }
 };
+
+exports.deleteRestock = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "ID Restock tidak valid",
+      });
+    }
+
+    const deleted = await restockService.deleteRestock(id);
+
+    res.status(200).json({
+      status: "OK",
+      message: "Riwayat restock berhasil dihapus",
+      data: deleted,
+    });
+  } catch (error) {
+    const isNotFound = error.message === "Riwayat restock tidak ditemukan";
+    res.status(isNotFound ? 404 : 400).json({
+      status: "Failed",
+      message: error.message || "Failed To Delete Restock",
+    });
+  }
+};

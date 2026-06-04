@@ -6,8 +6,12 @@ const { verifyToken, checkRole } = require("../../middlewares/auth.middleware");
 // Semua route order memerlukan autentikasi
 router.use(verifyToken);
 
-// Membuat pesanan baru (semua user yang sudah login bisa order)
-router.post("/", orderController.createOrder);
+// Membuat pesanan baru (USER untuk online, KASIR untuk offline)
+router.post(
+  "/",
+  checkRole("USER", "KASIR"),
+  orderController.createOrder
+);
 
 // Mendapatkan semua pesanan (USER hanya lihat miliknya, admin/kasir lihat semua)
 router.get("/", orderController.getOrders);

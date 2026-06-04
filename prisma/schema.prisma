@@ -22,7 +22,6 @@ model Product {
   supplier    Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   images      ProductImage[]
   variants    ProductVariant[]
-  orderItems  OrderItem[]
   wishlists   Wishlist[]
   reviews     Review[]
   createdAt   DateTime         @default(now())
@@ -36,13 +35,14 @@ model ProductImage {
 }
 
 model ProductVariant {
-  id        Int       @id @default(autoincrement())
-  size      String // S, M, L, XL
-  color     String? // Opsional: Hitam, Merah, dll.
-  stock     Int
-  productId Int
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  restocks  Restock[]
+  id         Int         @id @default(autoincrement())
+  size       String // S, M, L, XL
+  color      String? // Opsional: Hitam, Merah, dll.
+  stock      Int
+  productId  Int
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  restocks   Restock[]
+  orderItems OrderItem[]
 }
 
 enum Role {
@@ -54,16 +54,18 @@ enum Role {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
-  email     String     @unique
-  password  String
-  nama      String
-  foto      String?
-  role      Role       @default(USER)
-  orders    Order[]
-  wishlists Wishlist[]
-  reviews   Review[]
-  createdAt DateTime   @default(now())
+  id              Int        @id @default(autoincrement())
+  email           String     @unique
+  password        String
+  nama            String
+  foto            String?
+  role            Role       @default(USER)
+  orders          Order[]    @relation("CustomerOrders")
+  kasirOrders     Order[]    @relation("KasirOrders")
+  packagingOrders Order[]    @relation("PackagingOrders")
+  wishlists       Wishlist[]
+  reviews         Review[]
+  createdAt       DateTime   @default(now())
 }
 
 model Supplier {
@@ -78,6 +80,7 @@ model Supplier {
 
 enum OrderStatus {
   DIPROSES
+  DIKEMAS
   DIKIRIM
   SELESAI
 }
@@ -101,14 +104,20 @@ enum PaymentStatus {
 
 model Order {
   id                Int         @id @default(autoincrement())
-  userId            Int
-  user              User        @relation(fields: [userId], references: [id])
+  userId            Int?
+  user              User?       @relation("CustomerOrders", fields: [userId], references: [id])
+  kasirId           Int?
+  kasir             User?       @relation("KasirOrders", fields: [kasirId], references: [id])
+  packagingId       Int?
+  packagingStaff    User?       @relation("PackagingOrders", fields: [packagingId], references: [id])
   total_harga       Int
   ongkos_kirim      Int?
   status            OrderStatus @default(DIPROSES)
   jenis             OrderType
   alamat_pengiriman String?
   catatan           String?
+  ekspedisi         String?
+  resi              String?
   items             OrderItem[]
   payment           Payment?
   reviews           Review[]
@@ -116,13 +125,13 @@ model Order {
 }
 
 model OrderItem {
-  id           Int     @id @default(autoincrement())
-  orderId      Int
-  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId    Int
-  product      Product @relation(fields: [productId], references: [id])
-  jumlah       Int
-  harga_satuan Int
+  id               Int            @id @default(autoincrement())
+  orderId          Int
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariantId Int
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id])
+  jumlah           Int
+  harga_satuan     Int
 }
 
 model Payment {
