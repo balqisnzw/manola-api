@@ -12,6 +12,7 @@ const restockRoutes = require("./modules/restocks/restock.routes");
 const employeeRoutes = require("./modules/employees/employee.routes");
 const reviewRoutes = require("./modules/reviews/review.routes");
 const wishlistRoutes = require("./modules/wishlists/wishlist.routes");
+const analyticsRoutes = require("./modules/analytics/analytics.routes");
 
 const app = express();
 
@@ -30,5 +31,6 @@ app.use("/api/restocks", restockRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlists", wishlistRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 module.exports = app;
