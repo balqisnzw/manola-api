@@ -11,5 +11,9 @@ router.post("/reset-password", authController.resetPassword);
 // Get all users (OWNER only, for pelanggan page)
 router.get("/users", verifyToken, checkRole("OWNER"), authController.getUsers);
 
+// Profile and Password updates (Protected)
+router.put("/profile", verifyToken, authController.updateProfile);
+router.post("/change-password", verifyToken, authController.changePassword);
+
 module.exports = router;
 

@@ -155,3 +155,46 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { nama, email } = req.body;
+
+    const updatedUser = await authService.updateUserProfile(userId, { nama, email });
+    const { password: _, ...userWithoutPassword } = updatedUser;
+
+    res.json(userWithoutPassword);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ message: "Email sudah digunakan oleh akun lain" });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await authService.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Kata sandi saat ini salah" });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await authService.updateUserPasswordById(userId, hashedPassword);
+
+    res.json({ message: "Password berhasil diubah" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

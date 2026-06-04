@@ -6,6 +6,12 @@ const findUserByEmail = async (email) => {
   });
 };
 
+const findUserById = async (id) => {
+  return await prisma.user.findUnique({
+    where: { id },
+  });
+};
+
 const createUser = async (data) => {
   return await prisma.user.create({
     data,
@@ -16,6 +22,20 @@ const updateUserPassword = async (email, hashedPassword) => {
   return await prisma.user.update({
     where: { email },
     data: { password: hashedPassword },
+  });
+};
+
+const updateUserPasswordById = async (id, hashedPassword) => {
+  return await prisma.user.update({
+    where: { id },
+    data: { password: hashedPassword },
+  });
+};
+
+const updateUserProfile = async (id, data) => {
+  return await prisma.user.update({
+    where: { id },
+    data,
   });
 };
 
@@ -62,8 +82,11 @@ const getAllUsers = async (role) => {
 
 module.exports = {
   findUserByEmail,
+  findUserById,
   createUser,
   updateUserPassword,
+  updateUserPasswordById,
+  updateUserProfile,
   createResetToken,
   findResetToken,
   deleteResetToken,
