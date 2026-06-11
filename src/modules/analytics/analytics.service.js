@@ -10,11 +10,18 @@ const getDashboardData = async () => {
   const completedOrders = await prisma.order.findMany({
     where: { status: "SELESAI" },
     include: {
+      kasir: {
+        select: { id: true, nama: true }
+      },
       items: {
         include: {
           variant: {
             include: {
-              product: true,
+              product: {
+                include: {
+                  category: true,
+                },
+              },
             },
           },
         },
@@ -38,6 +45,7 @@ const getDashboardData = async () => {
   const monthlyDataArr = Array(12).fill(0);
   
   const productSales = {};
+  const cashierSales = {};
 
   completedOrders.forEach(o => {
     const d = new Date(o.createdAt);
@@ -61,7 +69,7 @@ const getDashboardData = async () => {
     // Process items for top products
     o.items.forEach(item => {
       const productName = item.variant?.product?.name || "Unknown";
-      const category = item.variant?.product?.category || "-";
+      const category = item.variant?.product?.category?.nama || "-";
       
       if (!productSales[productName]) {
         productSales[productName] = { name: productName, category, sold: 0, revenue: 0 };
@@ -69,6 +77,16 @@ const getDashboardData = async () => {
       productSales[productName].sold += item.jumlah;
       productSales[productName].revenue += item.harga_satuan * item.jumlah;
     });
+
+    // Process cashier performance
+    if (o.kasirId && o.kasir) {
+      const cashierName = o.kasir.nama || "Unknown";
+      if (!cashierSales[o.kasirId]) {
+        cashierSales[o.kasirId] = { id: o.kasirId, name: cashierName, totalSales: 0, orderCount: 0 };
+      }
+      cashierSales[o.kasirId].totalSales += o.total_harga;
+      cashierSales[o.kasirId].orderCount += 1;
+    }
   });
 
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -81,6 +99,11 @@ const getDashboardData = async () => {
     .sort((a, b) => b.sold - a.sold)
     .slice(0, 10)
     .map((item, idx) => ({ ...item, rank: idx + 1 }));
+
+  const cashierRanking = Object.values(cashierSales)
+    .sort((a, b) => b.totalSales - a.totalSales);
+  
+  const bestCashier = cashierRanking[0] || null;
 
   // Find low stock variants (stock <= 3)
   const lowStockProducts = [];
@@ -108,6 +131,8 @@ const getDashboardData = async () => {
     monthlyData,
     topProducts,
     lowStockProducts,
+    bestCashier,
+    cashierRanking,
   };
 };
 

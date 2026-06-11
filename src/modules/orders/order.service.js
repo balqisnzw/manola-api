@@ -1,7 +1,8 @@
 const prisma = require("../../libs/prisma");
+const notificationService = require("../notifications/notification.service");
 
 const createOrder = async (data) => {
-  const { userId, kasirId, jenis, alamat_pengiriman, ongkos_kirim, catatan, items } = data;
+  const { userId, kasirId, jenis, alamat_pengiriman, ongkos_kirim, ekspedisi, catatan, items } = data;
 
   // Validasi: pesanan online wajib punya alamat pengiriman
   if (jenis === "ONLINE" && !alamat_pengiriman) {
@@ -75,6 +76,7 @@ const createOrder = async (data) => {
         status: "DIPROSES",
         jenis,
         alamat_pengiriman: jenis === "ONLINE" ? alamat_pengiriman : null,
+        ekspedisi: jenis === "ONLINE" ? ekspedisi : null,
         catatan: catatan || null,
         items: {
           create: orderItemsData,
@@ -179,7 +181,7 @@ const updateOrderStatus = async (id, status, packagingId) => {
     updateData.packagingId = packagingId;
   }
 
-  return await prisma.order.update({
+  const updatedOrder = await prisma.order.update({
     where: { id },
     data: updateData,
     include: {
@@ -202,6 +204,83 @@ const updateOrderStatus = async (id, status, packagingId) => {
       payment: true,
     },
   });
+
+  // Buat notifikasi jika status berubah dan ini pesanan user (bukan guest/offline tanpa userId)
+  if (order.status !== status && updatedOrder.userId) {
+    let title = "";
+    let message = "";
+    switch (status) {
+      case "DIKEMAS":
+        title = "Pesanan sedang dikemas";
+        message = `Pesanan #${updatedOrder.id} sedang dalam proses pengemasan.`;
+        break;
+      case "DIKIRIM":
+        title = "Pesanan dalam pengiriman";
+        message = `Pesanan #${updatedOrder.id} sedang dikirim menuju alamat Anda.`;
+        break;
+      case "SELESAI":
+        title = "Pesanan telah selesai";
+        message = `Pesanan #${updatedOrder.id} sudah selesai. Jangan lupa tinggalkan ulasan!`;
+        break;
+    }
+    if (title && message) {
+      // Tidak di-await agar tidak menghambat response API
+      notificationService.createNotification(updatedOrder.userId, title, message).catch(console.error);
+    }
+  }
+
+  return updatedOrder;
+};
+
+const bulkUpdateOrderStatus = async (ids, status, packagingId) => {
+  const allowedStatuses = ["DIPROSES", "DIKEMAS", "DIKIRIM", "SELESAI"];
+  if (!allowedStatuses.includes(status)) {
+    throw new Error(`Status tidak valid. Harus salah satu dari: ${allowedStatuses.join(", ")}`);
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const updatedOrders = [];
+    for (const id of ids) {
+      const order = await tx.order.findUnique({ where: { id } });
+      if (!order) {
+        throw new Error(`Order dengan ID ${id} tidak ditemukan`);
+      }
+
+      const updateData = { status };
+      if (status === "DIKEMAS" && packagingId) {
+        updateData.packagingId = packagingId;
+      }
+
+      const updatedOrder = await tx.order.update({
+        where: { id },
+        data: updateData,
+      });
+
+      if (order.status !== status && updatedOrder.userId) {
+        let title = "";
+        let message = "";
+        switch (status) {
+          case "DIKEMAS":
+            title = "Pesanan sedang dikemas";
+            message = `Pesanan #${updatedOrder.id} sedang dalam proses pengemasan.`;
+            break;
+          case "DIKIRIM":
+            title = "Pesanan dalam pengiriman";
+            message = `Pesanan #${updatedOrder.id} sedang dikirim menuju alamat Anda.`;
+            break;
+          case "SELESAI":
+            title = "Pesanan telah selesai";
+            message = `Pesanan #${updatedOrder.id} sudah selesai. Jangan lupa tinggalkan ulasan!`;
+            break;
+        }
+        if (title && message) {
+          notificationService.createNotification(updatedOrder.userId, title, message).catch(console.error);
+        }
+      }
+      updatedOrders.push(updatedOrder);
+    }
+    return updatedOrders;
+  });
 };
 
 module.exports = {
@@ -209,4 +288,5 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
+  bulkUpdateOrderStatus,
 };

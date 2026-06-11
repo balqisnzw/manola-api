@@ -19,6 +19,13 @@ router.get("/", orderController.getOrders);
 // Mendapatkan detail pesanan
 router.get("/:id", orderController.getOrder);
 
+// Mengubah status pesanan secara massal
+router.put(
+  "/bulk-status",
+  checkRole("OWNER", "ADMIN", "KASIR", "PACKAGING"),
+  orderController.bulkUpdateOrderStatus
+);
+
 // Mengubah status pesanan (hanya OWNER, ADMIN, KASIR, PACKAGING)
 router.put(
   "/:id/status",

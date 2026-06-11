@@ -3,7 +3,10 @@ const router = express.Router();
 const paymentController = require("./payment.controller");
 const { verifyToken, checkRole } = require("../../middlewares/auth.middleware");
 
-// Semua route payment memerlukan autentikasi
+// Webhook Midtrans (Public, tanpa autentikasi JWT)
+router.post("/webhook", paymentController.midtransWebhook);
+
+// Semua route payment di bawah ini memerlukan autentikasi
 router.use(verifyToken);
 
 // Membuat pembayaran untuk suatu order
@@ -18,6 +21,12 @@ router.get(
 
 // Mendapatkan detail pembayaran
 router.get("/:id", paymentController.getPayment);
+
+// Regenerate Midtrans Token (Bayar Ulang)
+router.post("/:orderId/regenerate-token", paymentController.regenerateToken);
+
+// Membatalkan pembayaran/order (hanya USER pemilik order)
+router.post("/:orderId/cancel", paymentController.cancelPayment);
 
 // Mengupdate status pembayaran (hanya OWNER, ADMIN, KASIR)
 router.put(

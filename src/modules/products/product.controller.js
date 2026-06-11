@@ -53,7 +53,7 @@ exports.getProduct = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, supplierId, variants } =
+    const { name, description, price, categoryId, supplierId, variants } =
       req.body;
 
     if (!name || !description || !price) {
@@ -86,12 +86,8 @@ exports.createProduct = async (req, res) => {
       name,
       description,
       price: parseInt(price),
-      category: category || null,
-      supplier: supplierId
-        ? {
-            connect: { id: parseInt(supplierId) },
-          }
-        : undefined,
+      categoryId: categoryId ? parseInt(categoryId) : null,
+      supplierId: supplierId ? parseInt(supplierId) : null,
       images: {
         create: imagesData,
       },
@@ -128,7 +124,7 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    const { name, description, price, category, supplierId, variants } =
+    const { name, description, price, categoryId, supplierId, variants } =
       req.body;
 
     const updateData = {};
@@ -136,14 +132,10 @@ exports.updateProduct = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseInt(price);
-    if (category !== undefined) updateData.category = category || null;
+    if (categoryId !== undefined) updateData.categoryId = categoryId ? parseInt(categoryId) : null;
 
     if (supplierId !== undefined) {
-      updateData.supplier = supplierId
-        ? {
-            connect: { id: parseInt(supplierId) },
-          }
-        : { disconnect: true };
+      updateData.supplierId = supplierId ? parseInt(supplierId) : null;
     }
 
     // Handle image update

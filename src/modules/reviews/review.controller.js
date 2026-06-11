@@ -5,11 +5,16 @@ exports.createReview = async (req, res) => {
     const userId = req.user.id;
     const { productId, orderId, rating, komentar } = req.body;
 
-    if (!productId || !orderId || !rating || !komentar) {
+    if (!productId || !orderId || !rating) {
       return res.status(400).json({
         status: "Failed",
-        message: "Product ID, Order ID, Rating, And Comment Are Required",
+        message: "Product ID, Order ID, And Rating Are Required",
       });
+    }
+
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map(file => `/uploads/${file.filename}`);
     }
 
     const review = await reviewService.createReview({
@@ -18,6 +23,7 @@ exports.createReview = async (req, res) => {
       orderId: parseInt(orderId),
       rating: parseInt(rating),
       komentar,
+      images,
     });
 
     res.status(201).json({

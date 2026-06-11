@@ -1,7 +1,7 @@
 const prisma = require("../../libs/prisma");
 
 const createReview = async (data) => {
-  const { userId, productId, orderId, rating, komentar } = data;
+  const { userId, productId, orderId, rating, komentar, images } = data;
 
   // Validasi rating
   if (rating < 1 || rating > 5) {
@@ -56,6 +56,11 @@ const createReview = async (data) => {
       orderId,
       rating,
       komentar: komentar || null,
+      images: {
+        create: images && images.length > 0
+          ? images.map(imgUrl => ({ url: imgUrl }))
+          : []
+      }
     },
     include: {
       user: {
@@ -64,6 +69,7 @@ const createReview = async (data) => {
       product: {
         select: { id: true, name: true },
       },
+      images: true,
     },
   });
 };
@@ -75,6 +81,7 @@ const getReviewsByProduct = async (productId) => {
       user: {
         select: { id: true, nama: true },
       },
+      images: true,
     },
     orderBy: { createdAt: "desc" },
   });

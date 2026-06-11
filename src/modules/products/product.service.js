@@ -5,7 +5,9 @@ const getAllProducts = async (filters = {}) => {
   const where = {};
 
   if (category) {
-    where.category = { contains: category, mode: "insensitive" };
+    where.category = {
+      nama: { contains: category, mode: "insensitive" }
+    };
   }
 
   if (minPrice || maxPrice) {
@@ -14,49 +16,57 @@ const getAllProducts = async (filters = {}) => {
     if (maxPrice) where.price.lte = parseInt(maxPrice);
   }
 
-  return await prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where,
     include: {
       images: true,
       variants: true,
       supplier: true,
+      category: true,
     },
     orderBy: { id: "asc" },
   });
+  return products.map(mapProduct);
 };
 
 const getProductById = async (id) => {
-  return await prisma.product.findUnique({
+  const product = await prisma.product.findUnique({
     where: { id },
     include: {
       images: true,
       variants: true,
       supplier: true,
+      category: true,
     },
   });
+  return mapProduct(product);
 };
 
 const createProduct = async (data) => {
-  return await prisma.product.create({
+  const product = await prisma.product.create({
     data,
     include: {
       images: true,
       variants: true,
       supplier: true,
+      category: true,
     },
   });
+  return mapProduct(product);
 };
 
 const updateProduct = async (id, data) => {
-  return await prisma.product.update({
+  const product = await prisma.product.update({
     where: { id },
     data,
     include: {
       images: true,
       variants: true,
       supplier: true,
+      category: true,
     },
   });
+  return mapProduct(product);
 };
 
 const deleteProduct = async (id) => {
@@ -115,4 +125,13 @@ module.exports = {
   updateVariant,
   deleteVariant,
   getVariantById,
+};
+
+const mapProduct = (p) => {
+  if (!p) return null;
+  const { category, ...rest } = p;
+  return {
+    ...rest,
+    category: category ? category.nama : null,
+  };
 };

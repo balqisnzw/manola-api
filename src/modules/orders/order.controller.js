@@ -8,6 +8,7 @@ exports.createOrder = async (req, res) => {
       jenis,
       alamat_pengiriman,
       ongkos_kirim,
+      ekspedisi,
       catatan,
       items,
       userId: bodyUserId,
@@ -56,6 +57,7 @@ exports.createOrder = async (req, res) => {
       ongkos_kirim: ongkos_kirim
         ? parseInt(ongkos_kirim)
         : undefined,
+      ekspedisi,
       catatan,
       items: items.map((item) => ({
         variantId: parseInt(item.variantId),
@@ -170,6 +172,40 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(400).json({
       status: "Failed",
       message: error.message || "Failed To Update Order Status",
+    });
+  }
+};
+
+exports.bulkUpdateOrderStatus = async (req, res) => {
+  try {
+    const { ids, status } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0 || !status) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Order IDs (array) and status are required",
+      });
+    }
+
+    let packagingId = null;
+    if (status === "DIKEMAS" && req.user.role === "PACKAGING") {
+      packagingId = req.user.id;
+    }
+
+    const updatedOrders = await orderService.bulkUpdateOrderStatus(
+      ids.map(id => parseInt(id)),
+      status,
+      packagingId
+    );
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Bulk Update Order Status",
+      data: updatedOrders,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Failed Bulk Update Order Status",
     });
   }
 };

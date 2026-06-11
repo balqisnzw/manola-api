@@ -106,3 +106,52 @@ exports.updatePaymentStatus = async (req, res) => {
     });
   }
 };
+
+exports.regenerateToken = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const payment = await paymentService.regenerateMidtransToken(orderId);
+    
+    res.status(200).json({
+      status: "OK",
+      message: "Berhasil membuat token baru",
+      data: payment,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Gagal membuat token baru",
+    });
+  }
+};
+
+exports.cancelPayment = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const userId = req.user.id;
+    
+    const payment = await paymentService.cancelPayment(orderId, userId);
+    res.status(200).json({
+      status: "OK",
+      message: "Pesanan berhasil dibatalkan",
+      data: payment,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Gagal membatalkan pesanan",
+    });
+  }
+};
+
+exports.midtransWebhook = async (req, res) => {
+  try {
+    await paymentService.handleMidtransNotification(req.body);
+    res.status(200).json({ status: "OK", message: "Webhook processed" });
+  } catch (error) {
+    console.error("Midtrans Webhook Error:", error);
+    // Midtrans requires 200 OK even if error internally to stop retries, or 500 if we want it to retry. 
+    // We'll return 200 to acknowledge receipt if it's an expected format error, but 500 if DB failed.
+    res.status(500).json({ status: "Failed", message: "Webhook processing error" });
+  }
+};
