@@ -21,6 +21,8 @@ const bannerRoutes = require("./modules/banners/banner.routes");
 const shiftRoutes = require("./modules/shifts/shift.routes");
 const settingRoutes = require("./modules/settings/setting.routes");
 const shippingRoutes = require("./modules/shipping/shipping.routes");
+const returnRoutes = require("./modules/returns/return.routes");
+const cartRoutes = require("./modules/cart/cart.routes");
 
 const app = express();
 
@@ -48,5 +50,7 @@ app.use("/api/banners", bannerRoutes);
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/returns", returnRoutes);
+app.use("/api/cart", cartRoutes);
 
 module.exports = app;

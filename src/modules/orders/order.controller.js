@@ -12,6 +12,7 @@ exports.createOrder = async (req, res) => {
       catatan,
       items,
       userId: bodyUserId,
+      voucherCode,
     } = req.body;
 
     // Validasi: jenis dan items wajib ada
@@ -59,6 +60,7 @@ exports.createOrder = async (req, res) => {
         : undefined,
       ekspedisi,
       catatan,
+      voucherCode,
       items: items.map((item) => ({
         variantId: parseInt(item.variantId),
         jumlah: parseInt(item.jumlah),
@@ -80,9 +82,9 @@ exports.createOrder = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const { status, jenis } = req.query;
+    const { status, jenis, userId } = req.query;
 
-    const filters = { status, jenis };
+    const filters = { status, jenis, userId };
 
     // USER hanya bisa melihat order miliknya sendiri
     if (req.user.role === "USER") {
@@ -142,13 +144,36 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
-    const { status } = req.body;
+    const { status, resi, ekspedisi } = req.body;
 
     if (!status) {
       return res.status(400).json({
         status: "Failed",
         message: "Order Status Is Required",
       });
+    }
+
+    // ── Proteksi khusus role USER ──
+    if (req.user.role === "USER") {
+      if (status !== "SELESAI") {
+        return res.status(403).json({
+          status: "Failed",
+          message: "Anda hanya dapat mengonfirmasi penerimaan pesanan",
+        });
+      }
+      const existingOrder = await orderService.getOrderById(id);
+      if (!existingOrder) {
+        return res.status(404).json({ status: "Failed", message: "Order Not Found" });
+      }
+      if (existingOrder.userId !== req.user.id) {
+        return res.status(403).json({ status: "Failed", message: "Access Denied" });
+      }
+      if (existingOrder.status !== "DIKIRIM") {
+        return res.status(400).json({
+          status: "Failed",
+          message: "Pesanan hanya bisa dikonfirmasi jika statusnya sedang Dikirim",
+        });
+      }
     }
 
     // Otomatis isi packagingId dari JWT saat status diubah ke DIKEMAS
@@ -160,7 +185,8 @@ exports.updateOrderStatus = async (req, res) => {
     const updatedOrder = await orderService.updateOrderStatus(
       id,
       status,
-      packagingId
+      packagingId,
+      { resi, ekspedisi }
     );
 
     res.status(200).json({

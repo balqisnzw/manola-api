@@ -3,7 +3,7 @@ const prisma = require("../../libs/prisma");
 const EMPLOYEE_ROLES = ["ADMIN", "KASIR", "PACKAGING"];
 
 const createEmployee = async (data) => {
-  const { email, password, nama, foto, role } = data;
+  const { email, password, nama, foto, role, no_telepon } = data;
 
   if (!EMPLOYEE_ROLES.includes(role)) {
     throw new Error(`Role tidak valid. Harus salah satu dari: ${EMPLOYEE_ROLES.join(", ")}`);
@@ -22,12 +22,14 @@ const createEmployee = async (data) => {
       nama,
       foto: foto || null,
       role,
+      no_telepon,
     },
     select: {
       id: true,
       email: true,
       nama: true,
       foto: true,
+      no_telepon: true,
       role: true,
       createdAt: true,
     },
@@ -44,6 +46,7 @@ const getAllEmployees = async () => {
       email: true,
       nama: true,
       foto: true,
+      no_telepon: true,
       role: true,
       createdAt: true,
     },

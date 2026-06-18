@@ -28,6 +28,9 @@ router.post("/:orderId/regenerate-token", paymentController.regenerateToken);
 // Membatalkan pembayaran/order (hanya USER pemilik order)
 router.post("/:orderId/cancel", paymentController.cancelPayment);
 
+// Sinkronisasi status dari Midtrans secara manual (berguna saat webhook localhost gagal)
+router.post("/:orderId/sync", paymentController.syncPaymentStatus);
+
 // Mengupdate status pembayaran (hanya OWNER, ADMIN, KASIR)
 router.put(
   "/:id/status",

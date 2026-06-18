@@ -3,12 +3,12 @@ const employeeService = require("./employee.service");
 
 exports.createEmployee = async (req, res) => {
   try {
-    const { email, password, nama, foto, role } = req.body;
+    const { email, password, nama, foto, role, no_telepon } = req.body;
 
-    if (!email || !password || !nama || !role) {
+    if (!email || !password || !nama || !role || !no_telepon) {
       return res.status(400).json({
         status: "Failed",
-        message: "Email, Password, Name, And Role Are Required",
+        message: "Email, Password, Name, Role, And Phone Number Are Required",
       });
     }
 
@@ -22,6 +22,7 @@ exports.createEmployee = async (req, res) => {
       nama,
       foto,
       role,
+      no_telepon,
     });
 
     res.status(201).json({

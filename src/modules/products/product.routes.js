@@ -6,6 +6,15 @@ const upload = require("../../middlewares/upload.middleware");
 
 // Public routes (tidak perlu token)
 router.get("/", productController.getProducts);
+
+// SKU Suggestion (hanya OWNER dan ADMIN)
+router.get(
+  "/sku-suggestion",
+  verifyToken,
+  checkRole("OWNER", "ADMIN"),
+  productController.getSkuSuggestion
+);
+
 router.get("/:id", productController.getProduct);
 
 // Protected routes (hanya OWNER dan ADMIN)
@@ -13,7 +22,7 @@ router.post(
   "/",
   verifyToken,
   checkRole("OWNER", "ADMIN"),
-  upload.array("photos", 5), // maksimal 5 foto
+  upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }]),
   productController.createProduct
 );
 
@@ -21,7 +30,7 @@ router.put(
   "/:id",
   verifyToken,
   checkRole("OWNER", "ADMIN"),
-  upload.array("photos", 5),
+  upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }]),
   productController.updateProduct
 );
 

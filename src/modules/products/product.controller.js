@@ -51,9 +51,25 @@ exports.getProduct = async (req, res) => {
   }
 };
 
+exports.getSkuSuggestion = async (req, res) => {
+  try {
+    const suggestion = await productService.getSkuSuggestion();
+    res.status(200).json({
+      status: "OK",
+      message: "Success Get SKU Suggestion",
+      data: { sku: suggestion },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "Failed",
+      message: "Failed To Get SKU Suggestion",
+    });
+  }
+};
+
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, categoryId, supplierId, variants } =
+    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku } =
       req.body;
 
     if (!name || !description || !price) {
@@ -76,18 +92,25 @@ exports.createProduct = async (req, res) => {
       }));
     }
 
-    const imagesData = req.files
-      ? req.files.map((f) => ({
+    const imagesData = req.files && req.files['photos']
+      ? req.files['photos'].map((f) => ({
           url: `/uploads/${f.filename}`,
         }))
       : [];
+
+    const descriptionImageUrl = req.files && req.files['descriptionImage'] && req.files['descriptionImage'][0]
+      ? `/uploads/${req.files['descriptionImage'][0].filename}`
+      : null;
 
     const data = {
       name,
       description,
       price: parseInt(price),
+      promoPrice: (promoPrice !== undefined && promoPrice !== null && promoPrice !== "" && promoPrice !== "null") ? parseInt(promoPrice) : null,
       categoryId: categoryId ? parseInt(categoryId) : null,
       supplierId: supplierId ? parseInt(supplierId) : null,
+      sku: sku && sku.trim() !== "" ? sku.trim() : null,
+      descriptionImageUrl: descriptionImageUrl,
       images: {
         create: imagesData,
       },
@@ -104,6 +127,12 @@ exports.createProduct = async (req, res) => {
       data: newProduct,
     });
   } catch (error) {
+    if (error.code === "P2002" && error.meta?.target?.includes("sku")) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Kode produk (SKU) sudah digunakan oleh produk lain",
+      });
+    }
     res.status(500).json({
       status: "Failed",
       message: "Failed To Create Product",
@@ -124,7 +153,7 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    const { name, description, price, categoryId, supplierId, variants } =
+    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku } =
       req.body;
 
     const updateData = {};
@@ -132,22 +161,30 @@ exports.updateProduct = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseInt(price);
+    if (promoPrice !== undefined) {
+      updateData.promoPrice = (promoPrice !== null && promoPrice !== "" && promoPrice !== "null") ? parseInt(promoPrice) : null;
+    }
     if (categoryId !== undefined) updateData.categoryId = categoryId ? parseInt(categoryId) : null;
+
+    if (sku !== undefined) {
+      updateData.sku = sku && sku.trim() !== "" ? sku.trim() : null;
+    }
 
     if (supplierId !== undefined) {
       updateData.supplierId = supplierId ? parseInt(supplierId) : null;
     }
 
-    // Handle image update
-    if (req.files && req.files.length > 0) {
+    // Handle photos update
+    let newPhotos = [];
+    if (req.files && req.files['photos'] && req.files['photos'].length > 0) {
+      newPhotos = req.files['photos'].map((f) => ({ url: `/uploads/${f.filename}` }));
+    }
+
+    if (newPhotos.length > 0) {
+      // Jika ada upload foto baru, kita timpa SEMUA foto lama karena begini cara kerjanya sekarang
       if (existing.images) {
         existing.images.forEach((img) => {
-          const filePath = path.join(
-            __dirname,
-            "../../public",
-            img.url
-          );
-
+          const filePath = path.join(__dirname, "../../public", img.url);
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
@@ -156,10 +193,46 @@ exports.updateProduct = async (req, res) => {
 
       updateData.images = {
         deleteMany: {},
-        create: req.files.map((f) => ({
-          url: `/uploads/${f.filename}`,
-        })),
+        create: newPhotos,
       };
+    } else if (req.body.removeImageIds) {
+      // Jika TIDAK ADA foto baru, tapi admin ingin menghapus beberapa foto spesifik
+      try {
+        const removeImageIds = JSON.parse(req.body.removeImageIds).map(id => parseInt(id));
+        if (removeImageIds.length > 0) {
+          updateData.images = {
+            deleteMany: { id: { in: removeImageIds } }
+          };
+          if (existing.images) {
+            existing.images.forEach((img) => {
+              if (removeImageIds.includes(img.id)) {
+                const filePath = path.join(__dirname, "../../public", img.url);
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+              }
+            });
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Handle description image update
+    if (req.files && req.files['descriptionImage'] && req.files['descriptionImage'].length > 0) {
+      if (existing.descriptionImageUrl) {
+        const filePath = path.join(__dirname, "../../public", existing.descriptionImageUrl);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      updateData.descriptionImageUrl = `/uploads/${req.files['descriptionImage'][0].filename}`;
+    } else if (req.body.removeDescriptionImage === "true") {
+      // Admin ingin menghapus foto deskripsi yang sudah ada
+      if (existing.descriptionImageUrl) {
+        const filePath = path.join(__dirname, "../../public", existing.descriptionImageUrl);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      updateData.descriptionImageUrl = null;
     }
 
     // Handle variants update
@@ -167,14 +240,39 @@ exports.updateProduct = async (req, res) => {
       const parsedVariants =
         typeof variants === "string" ? JSON.parse(variants) : variants;
 
+      const existingVariants = existing.variants || [];
+      const variantsToKeepIds = [];
+      const updateOperations = [];
+      const createOperations = [];
+
+      for (const v of parsedVariants) {
+        const match = existingVariants.find(ev => ev.size === v.size && (ev.color || null) === (v.color || null));
+        if (match) {
+          variantsToKeepIds.push(match.id);
+          updateOperations.push({
+            where: { id: match.id },
+            data: { stock: parseInt(v.stock) }
+          });
+        } else {
+          createOperations.push({
+            size: v.size,
+            color: v.color || null,
+            stock: parseInt(v.stock)
+          });
+        }
+      }
+
+      const deleteOperations = existingVariants
+        .filter(ev => !variantsToKeepIds.includes(ev.id))
+        .map(ev => ev.id);
+
       updateData.variants = {
-        deleteMany: {},
-        create: parsedVariants.map((v) => ({
-          size: v.size,
-          color: v.color || null,
-          stock: parseInt(v.stock),
-        })),
+        update: updateOperations,
+        create: createOperations,
       };
+      if (deleteOperations.length > 0) {
+        updateData.variants.deleteMany = { id: { in: deleteOperations } };
+      }
     }
 
     const updatedProduct = await productService.updateProduct(
@@ -188,6 +286,12 @@ exports.updateProduct = async (req, res) => {
       data: updatedProduct,
     });
   } catch (error) {
+    if (error.code === "P2002" && error.meta?.target?.includes("sku")) {
+      return res.status(400).json({
+        status: "Failed",
+        message: "Kode produk (SKU) sudah digunakan oleh produk lain",
+      });
+    }
     res.status(500).json({
       status: "Failed",
       message: "Failed To Update Product",
@@ -226,9 +330,10 @@ exports.deleteProduct = async (req, res) => {
       message: "Success Delete Product",
     });
   } catch (error) {
+    console.error("[deleteProduct] Error:", error);
     res.status(500).json({
       status: "Failed",
-      message: "Failed To Delete Product",
+      message: error.message || "Failed To Delete Product",
     });
   }
 };

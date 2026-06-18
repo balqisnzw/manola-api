@@ -144,6 +144,23 @@ exports.cancelPayment = async (req, res) => {
   }
 };
 
+exports.syncPaymentStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    await paymentService.syncPaymentStatusFromMidtrans(orderId);
+    
+    res.status(200).json({
+      status: "OK",
+      message: "Berhasil sinkronisasi status dari Midtrans",
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Gagal sinkronisasi status",
+    });
+  }
+};
+
 exports.midtransWebhook = async (req, res) => {
   try {
     await paymentService.handleMidtransNotification(req.body);

@@ -73,6 +73,7 @@ const getAllUsers = async (role) => {
       email: true,
       nama: true,
       foto: true,
+      no_telepon: true,
       role: true,
       createdAt: true,
     },

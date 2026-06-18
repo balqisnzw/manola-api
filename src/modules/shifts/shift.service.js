@@ -65,8 +65,9 @@ const addPettyCash = async (shiftId, jumlah, keterangan) => {
   });
 };
 
-const getAllShifts = async () => {
+const getAllShifts = async (filters = {}) => {
   return await prisma.cashierShift.findMany({
+    where: filters,
     include: {
       kasir: {
         select: { id: true, nama: true },

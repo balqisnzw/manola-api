@@ -73,6 +73,20 @@ const calculateCost = async (destinationDistrictId, weight, courier) => {
 
   if (!response.ok) {
     const errorText = await response.text();
+    if (response.status >= 500) {
+      console.warn("Komerce API is down. Returning fallback shipping cost.");
+      return [
+        {
+          service: selectedCourier === "jne" ? "REG" : "ECO",
+          description: "Layanan Regular (Sistem Gangguan - Estimasi)",
+          cost: [{
+            value: 20000,
+            etd: "2-4",
+            note: ""
+          }]
+        }
+      ];
+    }
     throw new Error(`Kalkulasi ongkir gagal (${response.status}): ${errorText}`);
   }
 

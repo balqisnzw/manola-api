@@ -29,7 +29,7 @@ router.put(
 // Mengubah status pesanan (hanya OWNER, ADMIN, KASIR, PACKAGING)
 router.put(
   "/:id/status",
-  checkRole("OWNER", "ADMIN", "KASIR", "PACKAGING"),
+  checkRole("OWNER", "ADMIN", "KASIR", "PACKAGING", "USER"),
   orderController.updateOrderStatus
 );
 

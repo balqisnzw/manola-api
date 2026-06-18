@@ -9,7 +9,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, nama, foto } = req.body;
+    const { email, password, nama, foto, no_telepon } = req.body;
 
     // Cek apakah email sudah terdaftar
     const existingUser = await authService.findUserByEmail(email);
@@ -31,6 +31,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       nama,
       foto,
+      no_telepon,
     });
 
     // Hilangkan password dari response
@@ -159,9 +160,9 @@ exports.getUsers = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { nama, email } = req.body;
+    const { nama, email, no_telepon } = req.body;
 
-    const updatedUser = await authService.updateUserProfile(userId, { nama, email });
+    const updatedUser = await authService.updateUserProfile(userId, { nama, email, no_telepon });
     const { password: _, ...userWithoutPassword } = updatedUser;
 
     res.json(userWithoutPassword);

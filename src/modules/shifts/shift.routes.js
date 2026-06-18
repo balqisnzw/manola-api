@@ -10,6 +10,6 @@ router.get("/active", shiftController.getActiveShift);
 router.post("/start", shiftController.startShift);
 router.post("/:id/close", shiftController.closeShift);
 router.post("/petty-cash", shiftController.addPettyCash);
-router.get("/", checkRole("OWNER", "ADMIN"), shiftController.getShifts);
+router.get("/", checkRole("OWNER", "ADMIN", "KASIR"), shiftController.getShifts);
 
 module.exports = router;

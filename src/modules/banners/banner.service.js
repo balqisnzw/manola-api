@@ -7,7 +7,7 @@ const createBanner = async (data) => {
       gambar: data.gambar,
       link: data.link || null,
       urutan: data.urutan ? parseInt(data.urutan) : 0,
-      aktif: data.aktif !== undefined ? data.aktif : true,
+      aktif: data.aktif !== undefined ? (data.aktif === "true" || data.aktif === true) : true,
     },
   });
 };
@@ -29,7 +29,9 @@ const updateBanner = async (id, data) => {
   if (data.gambar !== undefined) updateData.gambar = data.gambar;
   if (data.link !== undefined) updateData.link = data.link;
   if (data.urutan !== undefined) updateData.urutan = parseInt(data.urutan);
-  if (data.aktif !== undefined) updateData.aktif = data.aktif;
+  if (data.aktif !== undefined) {
+    updateData.aktif = data.aktif === "true" || data.aktif === true;
+  }
 
   return await prisma.banner.update({ where: { id }, data: updateData });
 };

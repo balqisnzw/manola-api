@@ -9,4 +9,7 @@ router.get("/", settingController.getSettings);
 // PUT is restricted to ADMIN/OWNER only
 router.put("/", verifyToken, checkRole("OWNER", "ADMIN"), settingController.updateSettings);
 
+const upload = require("../../middlewares/upload.middleware");
+router.post("/logo", verifyToken, checkRole("OWNER", "ADMIN"), upload.single("logo"), settingController.uploadLogo);
+
 module.exports = router;

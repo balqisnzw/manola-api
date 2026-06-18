@@ -90,7 +90,11 @@ exports.addPettyCash = async (req, res) => {
 
 exports.getShifts = async (req, res) => {
   try {
-    const shifts = await shiftService.getAllShifts();
+    const filters = {};
+    if (req.user.role === "KASIR") {
+      filters.kasirId = req.user.id;
+    }
+    const shifts = await shiftService.getAllShifts(filters);
     res.status(200).json({
       status: "OK",
       message: "Success get shifts",

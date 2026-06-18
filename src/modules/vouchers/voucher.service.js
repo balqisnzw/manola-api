@@ -75,7 +75,7 @@ const validateVoucher = async (kode, totalBelanja) => {
 
   const now = new Date();
   if (now < voucher.tanggal_mulai || now > voucher.tanggal_berakhir) {
-    throw new Error("Voucher sudah expired atau belum aktif");
+    throw new Error("Voucher expired");
   }
   if (voucher.kuota > 0 && voucher.terpakai >= voucher.kuota) {
     throw new Error("Kuota voucher sudah habis");

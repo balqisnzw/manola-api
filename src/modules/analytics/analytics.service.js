@@ -29,6 +29,11 @@ const getDashboardData = async () => {
     },
   });
 
+  // Get all returned orders for shipping cost deduction
+  const returnedOrders = await prisma.order.findMany({
+    where: { status: "DIKEMBALIKAN" },
+  });
+
   // Get all products with variants for low stock calculation
   const products = await prisma.product.findMany({
     include: {
@@ -89,6 +94,27 @@ const getDashboardData = async () => {
     }
   });
 
+  // Deduct shipping cost of returned orders
+  returnedOrders.forEach(o => {
+    const d = new Date(o.createdAt);
+    const orderYear = d.getFullYear();
+    const orderMonth = d.getMonth();
+    const cost = o.ongkos_kirim || 0;
+    
+    if (orderYear === thisYear) {
+      yearlyTotal -= cost;
+      monthlyDataArr[orderMonth] -= cost;
+      
+      if (orderMonth === thisMonth) {
+        monthlyTotal -= cost;
+      }
+    }
+    
+    if (d >= todayStart) {
+      dailyTotal -= cost;
+    }
+  });
+
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const monthlyData = months.map((month, idx) => ({
     month,
@@ -108,17 +134,29 @@ const getDashboardData = async () => {
   // Find low stock variants (stock <= 3)
   const lowStockProducts = [];
   products.forEach(product => {
-    product.variants.forEach(variant => {
-      if (variant.stock <= 3) {
-        lowStockProducts.push({
-          id: variant.id,
-          productName: product.name,
-          size: variant.size,
-          color: variant.color || "-",
-          stock: variant.stock,
-        });
-      }
-    });
+    if (product.variants.length === 0) {
+      lowStockProducts.push({
+        id: `p-${product.id}`,
+        sku: product.sku || "-",
+        productName: product.name,
+        size: "-",
+        color: "-",
+        stock: 0,
+      });
+    } else {
+      product.variants.forEach(variant => {
+        if (variant.stock <= 3) {
+          lowStockProducts.push({
+            id: variant.id,
+            sku: product.sku || "-",
+            productName: product.name,
+            size: variant.size,
+            color: variant.color || "-",
+            stock: variant.stock,
+          });
+        }
+      });
+    }
   });
   lowStockProducts.sort((a, b) => a.stock - b.stock);
 

@@ -1,7 +1,7 @@
 const prisma = require("../../libs/prisma");
 
 const createRestock = async (data) => {
-  const { productVariantId, supplierId, jumlah } = data;
+  const { productVariantId, supplierId, jumlah, tipe = "MASUK", catatan } = data;
 
   // Validasi variant ada
   const variant = await prisma.productVariant.findUnique({
@@ -14,15 +14,21 @@ const createRestock = async (data) => {
   }
 
   if (jumlah <= 0) {
-    throw new Error("Jumlah restock harus lebih dari 0");
+    throw new Error("Jumlah harus lebih dari 0");
   }
 
-  // Gunakan transaksi: insert restock + increment stok
+  if (tipe === "KELUAR" && variant.stock < jumlah) {
+    throw new Error("Stok tidak mencukupi untuk dikeluarkan");
+  }
+
+  // Gunakan transaksi: insert restock + update stok
   const restock = await prisma.$transaction(async (tx) => {
-    // Tambah stok di variant
+    // Update stok di variant
     await tx.productVariant.update({
       where: { id: productVariantId },
-      data: { stock: { increment: jumlah } },
+      data: { 
+        stock: tipe === "MASUK" ? { increment: jumlah } : { decrement: jumlah } 
+      },
     });
 
     // Simpan data restock
@@ -30,7 +36,9 @@ const createRestock = async (data) => {
       data: {
         productVariantId,
         supplierId: supplierId || null,
+        tipe,
         jumlah,
+        catatan: catatan || null,
       },
       include: {
         variant: {
@@ -90,12 +98,14 @@ const deleteRestock = async (id) => {
     throw new Error("Riwayat restock tidak ditemukan");
   }
 
-  // Gunakan transaksi: kurangi stok variant + hapus riwayat
+  // Gunakan transaksi: revert stok variant + hapus riwayat
   return await prisma.$transaction(async (tx) => {
-    // Kurangi stok di variant sebesar jumlah yang direstock
+    // Revert stok di variant
     await tx.productVariant.update({
       where: { id: restock.productVariantId },
-      data: { stock: { decrement: restock.jumlah } },
+      data: { 
+        stock: restock.tipe === "MASUK" ? { decrement: restock.jumlah } : { increment: restock.jumlah } 
+      },
     });
 
     // Hapus riwayat restock

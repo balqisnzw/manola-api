@@ -2,7 +2,7 @@ const restockService = require("./restock.service");
 
 exports.createRestock = async (req, res) => {
   try {
-    const { productVariantId, supplierId, jumlah } = req.body;
+    const { productVariantId, supplierId, jumlah, tipe, catatan } = req.body;
 
     if (!productVariantId || !jumlah) {
       return res.status(400).json({
@@ -15,6 +15,8 @@ exports.createRestock = async (req, res) => {
       productVariantId: parseInt(productVariantId),
       supplierId: supplierId ? parseInt(supplierId) : null,
       jumlah: parseInt(jumlah),
+      tipe,
+      catatan,
     });
 
     res.status(201).json({

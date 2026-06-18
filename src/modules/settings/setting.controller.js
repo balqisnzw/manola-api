@@ -38,3 +38,24 @@ exports.updateSettings = async (req, res) => {
     });
   }
 };
+
+exports.uploadLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ status: "Failed", message: "Logo file is required" });
+    }
+    const logoUrl = `/uploads/${req.file.filename}`;
+    const updated = await settingService.updateSettings({ logo_url: logoUrl });
+    
+    res.status(200).json({
+      status: "OK",
+      message: "Logo uploaded successfully",
+      data: updated,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Failed to upload logo",
+    });
+  }
+};

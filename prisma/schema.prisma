@@ -13,10 +13,13 @@ datasource db {
 }
 
 model Product {
-  id          Int              @id @default(autoincrement())
-  name        String
-  description String?
-  price       Int
+  id                 Int              @id @default(autoincrement())
+  sku                String?          @unique
+  name               String
+  description        String?
+  descriptionImageUrl String?
+  price              Int
+  promoPrice         Int?
   categoryId  Int?
   category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   supplierId  Int?
@@ -45,6 +48,7 @@ model ProductVariant {
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   restocks   Restock[]
   orderItems OrderItem[]
+  cartItems  CartItem[]
 }
 
 enum Role {
@@ -61,6 +65,7 @@ model User {
   password        String
   nama            String
   foto            String?
+  no_telepon      String           @default("-")
   role            Role             @default(USER)
   orders          Order[]          @relation("CustomerOrders")
   kasirOrders     Order[]          @relation("KasirOrders")
@@ -68,6 +73,7 @@ model User {
   wishlists       Wishlist[]
   reviews         Review[]
   addresses       Address[]
+  cart            Cart?
   notifications   Notification[]
   shifts          CashierShift[]   @relation("KasirShifts")
   createdAt       DateTime         @default(now())
@@ -88,6 +94,7 @@ enum OrderStatus {
   DIKEMAS
   DIKIRIM
   SELESAI
+  DIKEMBALIKAN
 }
 
 enum OrderType {
@@ -126,15 +133,19 @@ model Order {
   items             OrderItem[]
   payment           Payment?
   reviews           Review[]
+  returnRequest     ReturnRequest?
   createdAt         DateTime    @default(now())
+  dikemasAt         DateTime?
+  dikirimAt         DateTime?
+  selesaiAt         DateTime?
 }
 
 model OrderItem {
   id               Int            @id @default(autoincrement())
   orderId          Int
   order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productVariantId Int
-  variant          ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId Int?
+  variant          ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
   jumlah           Int
   harga_satuan     Int
 }
@@ -147,7 +158,13 @@ model Payment {
   status_pembayaran PaymentStatus @default(MENUNGGU)
   midtrans_token    String?
   midtrans_order_id String?
+  midtrans_payment_type String?
   createdAt         DateTime      @default(now())
+}
+
+enum RestockType {
+  MASUK
+  KELUAR
 }
 
 model Restock {
@@ -156,7 +173,9 @@ model Restock {
   variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   supplierId       Int?
   supplier         Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  tipe             RestockType    @default(MASUK)
   jumlah           Int
+  catatan          String?
   createdAt        DateTime       @default(now())
 }
 
@@ -214,6 +233,30 @@ model Address {
   kecamatan  String?
   is_utama   Boolean  @default(false)
   createdAt  DateTime @default(now())
+}
+
+// ─── Manajemen Pengajuan Retur ──────────────────────────────────────────────────
+
+model ReturnRequest {
+  id         Int           @id @default(autoincrement())
+  orderId    Int           @unique
+  order      Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  alasan     String
+  keterangan String?
+  bukti_url  String?       // Legacy single photo (kept for backward compat)
+  resi       String?       // Nomor resi pengiriman retur dari pelanggan
+  status     String        @default("MENUNGGU") // MENUNGGU, DISETUJUI, DIKIRIM, SELESAI, DITOLAK
+  images     ReturnImage[]
+  createdAt  DateTime      @default(now())
+}
+
+// ─── Foto Bukti Retur ───────────────────────────────────────────────────────────
+
+model ReturnImage {
+  id              Int           @id @default(autoincrement())
+  url             String
+  returnRequestId Int
+  returnRequest   ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
 }
 
 // ─── Foto Ulasan ────────────────────────────────────────────────────────────────
@@ -311,4 +354,28 @@ model GlobalSetting {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
+}
+
+// ─── Keranjang Belanja ──────────────────────────────────────────────────────────
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id               Int            @id @default(autoincrement())
+  cartId           Int
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productVariantId Int
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  quantity         Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([cartId, productVariantId])
 }

@@ -20,9 +20,20 @@ const getAllProducts = async (filters = {}) => {
     where,
     include: {
       images: true,
-      variants: true,
+      variants: {
+        include: {
+          orderItems: {
+            include: {
+              order: {
+                select: { status: true }
+              }
+            }
+          }
+        }
+      },
       supplier: true,
       category: true,
+      reviews: { select: { rating: true } },
     },
     orderBy: { id: "asc" },
   });
@@ -34,9 +45,20 @@ const getProductById = async (id) => {
     where: { id },
     include: {
       images: true,
-      variants: true,
+      variants: {
+        include: {
+          orderItems: {
+            include: {
+              order: {
+                select: { status: true }
+              }
+            }
+          }
+        }
+      },
       supplier: true,
       category: true,
+      reviews: { select: { rating: true } },
     },
   });
   return mapProduct(product);
@@ -50,6 +72,7 @@ const createProduct = async (data) => {
       variants: true,
       supplier: true,
       category: true,
+      reviews: { select: { rating: true } },
     },
   });
   return mapProduct(product);
@@ -64,6 +87,7 @@ const updateProduct = async (id, data) => {
       variants: true,
       supplier: true,
       category: true,
+      reviews: { select: { rating: true } },
     },
   });
   return mapProduct(product);
@@ -115,6 +139,15 @@ const getVariantById = async (variantId) => {
   });
 };
 
+const getSkuSuggestion = async () => {
+  const lastProduct = await prisma.product.findFirst({
+    orderBy: { id: "desc" },
+    select: { id: true },
+  });
+  const nextNumber = (lastProduct ? lastProduct.id : 0) + 1;
+  return `PRD-${String(nextNumber).padStart(4, "0")}`;
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
@@ -125,13 +158,42 @@ module.exports = {
   updateVariant,
   deleteVariant,
   getVariantById,
+  getSkuSuggestion,
 };
 
 const mapProduct = (p) => {
   if (!p) return null;
-  const { category, ...rest } = p;
+  const { category, reviews, variants, ...rest } = p;
+  
+  let rating = 0;
+  if (reviews && reviews.length > 0) {
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    rating = Number((totalRating / reviews.length).toFixed(1));
+  }
+
+  let sold = 0;
+  if (variants && variants.length > 0) {
+    variants.forEach(variant => {
+      if (variant.orderItems && variant.orderItems.length > 0) {
+        variant.orderItems.forEach(item => {
+          if (item.order && item.order.status === 'SELESAI') {
+            sold += item.jumlah;
+          }
+        });
+      }
+    });
+  }
+
+  const cleanedVariants = variants ? variants.map(v => {
+    const { orderItems, ...vRest } = v;
+    return vRest;
+  }) : [];
+
   return {
     ...rest,
     category: category ? category.nama : null,
+    rating,
+    sold,
+    variants: cleanedVariants
   };
 };
