@@ -1,13 +1,30 @@
 const prisma = require("../../libs/prisma");
 
 const getAllProducts = async (filters = {}) => {
-  const { category, minPrice, maxPrice } = filters;
+  const { category, minPrice, maxPrice, size, color } = filters;
   const where = {};
 
   if (category) {
     where.category = {
       nama: { contains: category, mode: "insensitive" }
     };
+  }
+
+  if (size) {
+    where.variants = {
+      some: {
+        size: { equals: size, mode: "insensitive" }
+      }
+    };
+  }
+
+  if (color) {
+    where.OR = [
+      { colorTags: { contains: color, mode: "insensitive" } },
+      { name: { contains: color, mode: "insensitive" } },
+      { description: { contains: color, mode: "insensitive" } },
+      { variants: { some: { color: { contains: color, mode: "insensitive" } } } }
+    ];
   }
 
   if (minPrice || maxPrice) {

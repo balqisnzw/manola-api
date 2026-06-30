@@ -20,6 +20,7 @@ model Product {
   descriptionImageUrl String?
   price              Int
   promoPrice         Int?
+  colorTags          String?          // Kata kunci warna untuk filter (e.g. "Hitam, Hijau")
   categoryId  Int?
   category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   supplierId  Int?

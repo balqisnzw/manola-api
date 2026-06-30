@@ -4,12 +4,14 @@ const path = require("path");
 
 exports.getProducts = async (req, res) => {
   try {
-    const { category, minPrice, maxPrice } = req.query;
+    const { category, minPrice, maxPrice, size, color } = req.query;
 
     const products = await productService.getAllProducts({
       category,
       minPrice,
       maxPrice,
+      size,
+      color,
     });
 
     res.status(200).json({
@@ -69,7 +71,7 @@ exports.getSkuSuggestion = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku } =
+    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku, colorTags } =
       req.body;
 
     if (!name || !description || !price) {
@@ -110,6 +112,7 @@ exports.createProduct = async (req, res) => {
       categoryId: categoryId ? parseInt(categoryId) : null,
       supplierId: supplierId ? parseInt(supplierId) : null,
       sku: sku && sku.trim() !== "" ? sku.trim() : null,
+      colorTags: colorTags && colorTags.trim() !== "" ? colorTags.trim() : null,
       descriptionImageUrl: descriptionImageUrl,
       images: {
         create: imagesData,
@@ -153,7 +156,7 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku } =
+    const { name, description, price, promoPrice, categoryId, supplierId, variants, sku, colorTags } =
       req.body;
 
     const updateData = {};
@@ -168,6 +171,9 @@ exports.updateProduct = async (req, res) => {
 
     if (sku !== undefined) {
       updateData.sku = sku && sku.trim() !== "" ? sku.trim() : null;
+    }
+    if (colorTags !== undefined) {
+      updateData.colorTags = colorTags && colorTags.trim() !== "" ? colorTags.trim() : null;
     }
 
     if (supplierId !== undefined) {
