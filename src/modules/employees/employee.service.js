@@ -54,6 +54,60 @@ const getAllEmployees = async () => {
   });
 };
 
+const getEmployeeById = async (id) => {
+  return await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      email: true,
+      nama: true,
+      foto: true,
+      no_telepon: true,
+      role: true,
+      createdAt: true,
+    },
+  });
+};
+
+const updateEmployee = async (id, data) => {
+  const user = await prisma.user.findUnique({ where: { id } });
+
+  if (!user) {
+    throw new Error("Karyawan tidak ditemukan");
+  }
+
+  if (!EMPLOYEE_ROLES.includes(user.role)) {
+    throw new Error("User ini bukan karyawan dan tidak bisa diubah melalui endpoint ini");
+  }
+
+  const updateData = {};
+  if (data.nama !== undefined) updateData.nama = data.nama;
+  if (data.no_telepon !== undefined) updateData.no_telepon = data.no_telepon;
+  if (data.role !== undefined) {
+    if (!EMPLOYEE_ROLES.includes(data.role)) {
+      throw new Error(`Role tidak valid. Harus salah satu dari: ${EMPLOYEE_ROLES.join(", ")}`);
+    }
+    updateData.role = data.role;
+  }
+  if (data.password) {
+    updateData.password = data.password;
+  }
+
+  return await prisma.user.update({
+    where: { id },
+    data: updateData,
+    select: {
+      id: true,
+      email: true,
+      nama: true,
+      foto: true,
+      no_telepon: true,
+      role: true,
+      createdAt: true,
+    },
+  });
+};
+
 const deleteEmployee = async (id) => {
   const user = await prisma.user.findUnique({ where: { id } });
 
@@ -79,5 +133,7 @@ const deleteEmployee = async (id) => {
 module.exports = {
   createEmployee,
   getAllEmployees,
+  getEmployeeById,
+  updateEmployee,
   deleteEmployee,
 };

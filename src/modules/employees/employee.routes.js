@@ -13,6 +13,9 @@ router.post("/", employeeController.createEmployee);
 // Melihat daftar karyawan
 router.get("/", employeeController.getEmployees);
 
+// Mengubah data / role karyawan
+router.put("/:id", employeeController.updateEmployee);
+
 // Menghapus akun karyawan
 router.delete("/:id", employeeController.deleteEmployee);
 

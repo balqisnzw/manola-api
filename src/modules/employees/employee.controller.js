@@ -55,6 +55,42 @@ exports.getEmployees = async (req, res) => {
   }
 };
 
+exports.updateEmployee = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { nama, role, no_telepon, password } = req.body;
+
+    const existingEmployee = await employeeService.getEmployeeById(id);
+
+    if (!existingEmployee) {
+      return res.status(404).json({
+        status: "Failed",
+        message: "Employee Not Found",
+      });
+    }
+
+    const updatePayload = { nama, role, no_telepon };
+
+    if (password && password.trim() !== "") {
+      const saltRounds = 10;
+      updatePayload.password = await bcrypt.hash(password, saltRounds);
+    }
+
+    const updatedEmployee = await employeeService.updateEmployee(id, updatePayload);
+
+    res.status(200).json({
+      status: "OK",
+      message: "Success Update Employee Account",
+      data: updatedEmployee,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Failed",
+      message: error.message || "Failed To Update Employee Account",
+    });
+  }
+};
+
 exports.deleteEmployee = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
