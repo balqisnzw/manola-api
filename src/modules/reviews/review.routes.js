@@ -5,7 +5,16 @@ const { verifyToken } = require("../../middlewares/auth.middleware");
 const upload = require("../../middlewares/upload.middleware");
 
 // Membuat ulasan (harus login), maksimal 3 gambar
-router.post("/", verifyToken, upload.array("images", 3), reviewController.createReview);
+router.post("/", verifyToken, (req, res, next) => {
+  const uploadMiddleware = upload.array("images", 3);
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      console.error("Multer/Cloudinary Error:", err);
+      return res.status(400).json({ status: "Failed", message: err.message || "Gagal mengunggah foto" });
+    }
+    next();
+  });
+}, reviewController.createReview);
 
 // Melihat ulasan produk tertentu (public)
 router.get("/products/:productId", reviewController.getProductReviews);
