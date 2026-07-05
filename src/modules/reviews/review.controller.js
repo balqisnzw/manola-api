@@ -14,7 +14,7 @@ exports.createReview = async (req, res) => {
 
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map(file => `/uploads/${file.filename}`);
+      images = req.files.map(file => file.path);
     }
 
     const review = await reviewService.createReview({

@@ -44,7 +44,7 @@ exports.uploadLogo = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ status: "Failed", message: "Logo file is required" });
     }
-    const logoUrl = `/uploads/${req.file.filename}`;
+    const logoUrl = req.file.path;
     const updated = await settingService.updateSettings({ logo_url: logoUrl });
     
     res.status(200).json({

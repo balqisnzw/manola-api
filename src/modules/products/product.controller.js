@@ -96,12 +96,12 @@ exports.createProduct = async (req, res) => {
 
     const imagesData = req.files && req.files['photos']
       ? req.files['photos'].map((f) => ({
-          url: `/uploads/${f.filename}`,
+          url: f.path,
         }))
       : [];
 
     const descriptionImageUrl = req.files && req.files['descriptionImage'] && req.files['descriptionImage'][0]
-      ? `/uploads/${req.files['descriptionImage'][0].filename}`
+      ? req.files['descriptionImage'][0].path
       : null;
 
     const data = {
@@ -183,7 +183,7 @@ exports.updateProduct = async (req, res) => {
     // Handle photos update
     let newPhotos = [];
     if (req.files && req.files['photos'] && req.files['photos'].length > 0) {
-      newPhotos = req.files['photos'].map((f) => ({ url: `/uploads/${f.filename}` }));
+      newPhotos = req.files['photos'].map((f) => ({ url: f.path }));
     }
 
     if (newPhotos.length > 0) {
@@ -229,7 +229,7 @@ exports.updateProduct = async (req, res) => {
           fs.unlinkSync(filePath);
         }
       }
-      updateData.descriptionImageUrl = `/uploads/${req.files['descriptionImage'][0].filename}`;
+      updateData.descriptionImageUrl = req.files['descriptionImage'][0].path;
     } else if (req.body.removeDescriptionImage === "true") {
       // Admin ingin menghapus foto deskripsi yang sudah ada
       if (existing.descriptionImageUrl) {

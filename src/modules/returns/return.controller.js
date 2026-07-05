@@ -17,7 +17,7 @@ exports.uploadImages = async (req, res) => {
       }
     }
 
-    const urls = req.files.map((f) => `/uploads/${f.filename}`);
+    const urls = req.files.map((f) => f.path);
     res.status(200).json({ status: "OK", message: "Upload berhasil", data: { urls } });
   } catch (error) {
     res.status(400).json({ status: "Failed", message: error.message });

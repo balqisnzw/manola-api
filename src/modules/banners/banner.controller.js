@@ -28,7 +28,7 @@ exports.createBanner = async (req, res) => {
 
     // Jika upload file via multer
     if (req.file) {
-      gambar = `/uploads/${req.file.filename}`;
+      gambar = req.file.path;
     }
 
     if (!gambar) {
@@ -46,7 +46,7 @@ exports.updateBanner = async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) {
-      data.gambar = `/uploads/${req.file.filename}`;
+      data.gambar = req.file.path;
     }
     
     if (data.urutan !== undefined) {
