@@ -9,7 +9,7 @@ router.post("/upload-image", verifyToken, (req, res, next) => {
   const uploadMiddleware = upload.array("files", 3);
   uploadMiddleware(req, res, (err) => {
     if (err) {
-      console.error("Multer/Cloudinary Error:", err);
+      console.error("Multer/Cloudinary Error:", err.message, err.stack);
       return res.status(400).json({ status: "Failed", message: err.message || "Gagal mengunggah foto" });
     }
     next();

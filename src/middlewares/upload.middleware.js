@@ -2,12 +2,13 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
 
-// Explicitly configure Cloudinary if CLOUDINARY_URL is not automatically parsed on Vercel
-if (process.env.CLOUDINARY_CLOUD_NAME) {
+// Parse CLOUDINARY_URL manually as fallback for Vercel
+if (!cloudinary.config().cloud_name && process.env.CLOUDINARY_URL) {
+  const url = new URL(process.env.CLOUDINARY_URL.replace("cloudinary://", "https://"));
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: url.hostname,
+    api_key: url.username,
+    api_secret: url.password,
   });
 }
 
