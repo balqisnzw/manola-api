@@ -10,6 +10,14 @@ router.get("/", settingController.getSettings);
 router.put("/", verifyToken, checkRole("OWNER", "ADMIN"), settingController.updateSettings);
 
 const upload = require("../../middlewares/upload.middleware");
-router.post("/logo", verifyToken, checkRole("OWNER", "ADMIN"), upload.single("logo"), settingController.uploadLogo);
+router.post("/logo", verifyToken, checkRole("OWNER", "ADMIN"), (req, res, next) => {
+  upload.single("logo")(req, res, (err) => {
+    if (err) {
+      console.error("Multer/Cloudinary Error (uploadLogo):", err.message, err.stack);
+      return res.status(400).json({ status: "Failed", message: err.message || "Gagal mengunggah foto" });
+    }
+    next();
+  });
+}, settingController.uploadLogo);
 
 module.exports = router;

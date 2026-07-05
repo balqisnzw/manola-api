@@ -22,7 +22,15 @@ router.post(
   "/",
   verifyToken,
   checkRole("OWNER", "ADMIN"),
-  upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }]),
+  (req, res, next) => {
+    upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }])(req, res, (err) => {
+      if (err) {
+        console.error("Multer/Cloudinary Error (createProduct):", err.message, err.stack);
+        return res.status(400).json({ status: "Failed", message: err.message || "Gagal mengunggah foto" });
+      }
+      next();
+    });
+  },
   productController.createProduct
 );
 
@@ -30,7 +38,15 @@ router.put(
   "/:id",
   verifyToken,
   checkRole("OWNER", "ADMIN"),
-  upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }]),
+  (req, res, next) => {
+    upload.fields([{ name: "photos", maxCount: 5 }, { name: "descriptionImage", maxCount: 1 }])(req, res, (err) => {
+      if (err) {
+        console.error("Multer/Cloudinary Error (updateProduct):", err.message, err.stack);
+        return res.status(400).json({ status: "Failed", message: err.message || "Gagal mengunggah foto" });
+      }
+      next();
+    });
+  },
   productController.updateProduct
 );
 
