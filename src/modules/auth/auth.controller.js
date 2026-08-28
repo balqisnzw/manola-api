@@ -89,8 +89,7 @@ exports.forgotPassword = async (req, res) => {
     // Cek apakah email terdaftar
     const user = await authService.findUserByEmail(email);
     if (!user) {
-      // Tetap kirim response sukses agar tidak bisa digunakan untuk cek email terdaftar
-      return res.json({ message: "Jika email terdaftar, link reset password telah dikirim" });
+      return res.status(404).json({ message: "Email tidak ditemukan" });
     }
 
     // Generate token random

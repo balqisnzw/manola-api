@@ -118,11 +118,11 @@ enum PaymentStatus {
 model Order {
   id                Int         @id @default(autoincrement())
   userId            Int?
-  user              User?       @relation("CustomerOrders", fields: [userId], references: [id])
+  user              User?       @relation("CustomerOrders", fields: [userId], references: [id], onDelete: SetNull)
   kasirId           Int?
-  kasir             User?       @relation("KasirOrders", fields: [kasirId], references: [id])
+  kasir             User?       @relation("KasirOrders", fields: [kasirId], references: [id], onDelete: SetNull)
   packagingId       Int?
-  packagingStaff    User?       @relation("PackagingOrders", fields: [packagingId], references: [id])
+  packagingStaff    User?       @relation("PackagingOrders", fields: [packagingId], references: [id], onDelete: SetNull)
   total_harga       Int
   ongkos_kirim      Int?
   status            OrderStatus @default(DIPROSES)
@@ -325,8 +325,8 @@ model Category {
 
 model CashierShift {
   id          Int        @id @default(autoincrement())
-  kasirId     Int
-  kasir       User       @relation("KasirShifts", fields: [kasirId], references: [id])
+  kasirId     Int?
+  kasir       User?       @relation("KasirShifts", fields: [kasirId], references: [id], onDelete: SetNull)
   modal_awal  Int
   total_cash  Int        @default(0)
   total_qris  Int        @default(0)
